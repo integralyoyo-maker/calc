@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>時速換算工具</title>
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4834/4834866.png">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; padding-top: 50px; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 25px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #666; font-size: 14px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background-color: #007AFF; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:active { background-color: #0056b3; }
+        .result { margin-top: 25px; padding: 15px; background-color: #e8f2ff; border-radius: 10px; text-align: center; }
+        .result-val { font-size: 24px; font-weight: bold; color: #007AFF; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>時速換算器</h2>
+    
+    <div class="input-group">
+        <label>距離 (公尺 m)</label>
+        <input type="number" id="distance" placeholder="請輸入距離">
+    </div>
+    
+    <div class="input-group">
+        <label>格數 (格)</label>
+        <input type="number" id="grids" placeholder="請輸入總格數">
+    </div>
+    
+    <div class="input-group">
+        <label>每秒格數 (格/s)</label>
+        <input type="number" id="gps" placeholder="請輸入每秒格數">
+    </div>
+    
+    <button onclick="calculate()">換算時速</button>
+    
+    <div class="result">
+        <div>換算結果：</div>
+        <div class="result-val" id="output">0 km/hr</div>
+    </div>
+</div>
+
+<script>
+    function calculate() {
+        const d = parseFloat(document.getElementById('distance').value);
+        const g = parseFloat(document.getElementById('grids').value);
+        const s = parseFloat(document.getElementById('gps').value);
+        
+        if (d && g && s) {
+            // 公式：(距離/格數) * (格數/每秒) * 3.6
+            const result = (d / g) * s * 3.6;
+            document.getElementById('output').innerText = result.toFixed(2) + " km/hr";
+        } else {
+            alert("請填寫所有欄位");
+        }
+    }
+</script>
+
+</body>
+</html>
