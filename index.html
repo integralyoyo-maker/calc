@@ -6,101 +6,155 @@
     <title>交通勤務工具箱</title>
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4834/4834866.png">
     <style>
-        body { font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f2f5; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; margin-bottom: 20px; border-top: 5px solid #007AFF; }
+        /* 定義顏色變數：一般模式使用溫和的淺灰色，不刺眼 */
+        :root {
+            --bg-color: #f5f5f2; /* 稍微偏米黃/淺灰，不刺眼 */
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --input-bg: #fafafa;
+            --border-color: #dddddd;
+            --result-bg: #f8f9fa;
+        }
+
+        /* 深色模式變數 */
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --input-bg: #3d3d3d;
+            --border-color: #444444;
+            --result-bg: #363636;
+        }
+
+        body { font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
+        
+        /* 右上角切換按鈕 */
+        .theme-toggle { position: fixed; top: 15px; right: 15px; z-index: 1000; background: var(--card-bg); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); cursor: pointer; font-size: 20px; }
+
+        .card { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; margin-bottom: 20px; border-top: 5px solid #007AFF; transition: 0.3s; }
+        .skid-card { border-top: 5px solid #34C759; }
         .overload-card { border-top: 5px solid #FF3B30; }
-        h2 { text-align: center; color: #333; margin-top: 0; font-size: 18px; margin-bottom: 15px; }
+
+        h2 { text-align: center; margin-top: 0; font-size: 18px; margin-bottom: 15px; }
         .input-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 5px; color: #666; font-size: 14px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #fafafa; }
+        label { display: block; margin-bottom: 5px; opacity: 0.8; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: var(--input-bg); color: var(--text-color); }
+        
         button { width: 100%; padding: 14px; background-color: #007AFF; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .btn-skid { background-color: #34C759; }
         .btn-overload { background-color: #FF3B30; }
-        button:active { opacity: 0.8; }
-        .result { margin-top: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px dashed #ccc; }
-        .result-item { margin: 8px 0; font-size: 15px; line-height: 1.4; }
-        .val { font-weight: bold; color: #FF3B30; font-size: 18px; }
-        .law-box { margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.6; display: none; font-weight: 500; }
-        /* 綠色：建議勸導 */
-        .law-advice { background-color: #E6F4EA; color: #1E7E34; border: 1px solid #B7E1CD; }
-        /* 藍色：限期改正 */
-        .law-info { background-color: #F2F8FF; color: #0056B3; border: 1px solid #C1DFFF; }
-        /* 紅色：禁止通行 */
-        .law-warning { background-color: #FFF2F2; color: #D70000; border: 1px solid #FFC1C1; }
-        .safe { color: #28a745; font-weight: bold; }
+        
+        .result { margin-top: 15px; padding: 15px; background-color: var(--result-bg); border-radius: 8px; border: 1px dashed var(--border-color); }
+        .val { font-weight: bold; font-size: 18px; }
+        .law-box { margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.6; display: none; }
+        
+        /* 法規顏色微調以適應深色模式 */
+        .law-advice { background-color: rgba(40, 167, 69, 0.15); color: #4cd964; border: 1px solid #28a745; }
+        .law-info { background-color: rgba(0, 122, 255, 0.15); color: #58a6ff; border: 1px solid #007aff; }
+        .law-warning { background-color: rgba(255, 59, 48, 0.15); color: #ff6b6b; border: 1px solid #ff3b30; }
     </style>
 </head>
 <body>
 
+<div class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</div>
+
 <div class="card">
-    <h2>⏱️ 時速換算(FPS)</h2>
+    <h2>⏱️ 時速換算 (FPS)</h2>
     <div class="input-group"><label>距離 (m)</label><input type="number" id="distance" placeholder="輸入距離"></div>
     <div class="input-group"><label>總格數 (格)</label><input type="number" id="grids" placeholder="輸入總格數"></div>
     <div class="input-group"><label>每秒格數 (格/s)</label><input type="number" id="gps" value="30"></div>
-    <button onclick="calculateSpeed()">開始換算</button>
-    <div class="result">換算結果：<span class="val" id="speed-output">0</span> km/hr</div>
+    <button onclick="calculateFPS()">開始換算</button>
+    <div class="result">換算結果：<span class="val" style="color:#007AFF" id="fps-output">0</span> km/hr</div>
+</div>
+
+<div class="card skid-card">
+    <h2>🚗 車速換算 (煞車痕)</h2>
+    <div class="input-group">
+        <label>路面狀況 (常用係數)</label>
+        <select id="friction-preset" onchange="document.getElementById('friction').value = this.value">
+            <option value="0.75">乾燥瀝青 (0.75)</option>
+            <option value="0.60">潮濕瀝青 (0.60)</option>
+            <option value="0.80">乾燥水泥 (0.80)</option>
+            <option value="0.55">潮濕水泥 (0.55)</option>
+            <option value="0.40">碎石路面 (0.40)</option>
+        </select>
+    </div>
+    <div class="input-group">
+        <label>自定義摩擦係數 (f)</label>
+        <input type="number" id="friction" step="0.01" value="0.75">
+    </div>
+    <div class="input-group">
+        <label>煞車痕距離 (m)</label>
+        <input type="number" id="skid-distance" step="0.1" placeholder="輸入長度">
+    </div>
+    <button class="btn-skid" onclick="calculateSkid()">計算車速</button>
+    <div class="result">換算時速：<span class="val" style="color:#34C759" id="skid-output">0</span> km/hr</div>
 </div>
 
 <div class="card overload-card">
-    <h2>🚚 超載計算 </h2>
-    <div class="input-group">
-        <label>實際總重 (公噸)</label>
-        <input type="number" id="actual-weight" step="0.001" placeholder="過磅總重">
-    </div>
-    <div class="input-group">
-        <label>核定總重 (公噸)</label>
-        <input type="number" id="limit-weight" step="0.001" placeholder="行照核重">
-    </div>
-    
+    <h2>⚖️ 超載計算器</h2>
+    <div class="input-group"><label>實際總重 (公噸)</label><input type="number" id="actual-weight" step="0.001"></div>
+    <div class="input-group"><label>核定總重 (公噸)</label><input type="number" id="limit-weight" step="0.001"></div>
     <button class="btn-overload" onclick="calculateOverload()">判定超載狀況</button>
-    
     <div id="result-area" class="result" style="display:none;">
-        <div class="result-item">超載狀態：<span id="status-text"></span></div>
-        <div class="result-item">超載比例：<span class="val" id="percent-val">0</span> %</div>
-        
+        <div class="result-item">超載：<span class="val" id="over-val" style="color:#FF3B30">0</span> 噸</div>
+        <div class="result-item">比例：<span class="val" id="percent-val" style="color:#FF3B30">0</span> %</div>
         <div id="law-msg" class="law-box"></div>
     </div>
 </div>
 
 <script>
-    function calculateSpeed() {
+    // 主題切換
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('theme-btn');
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            btn.innerText = '🌙';
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            btn.innerText = '☀️';
+        }
+    }
+
+    function calculateFPS() {
         const d = parseFloat(document.getElementById('distance').value);
         const g = parseFloat(document.getElementById('grids').value);
         const s = parseFloat(document.getElementById('gps').value);
-        if (d && g && s) document.getElementById('speed-output').innerText = ((d / g) * s * 3.6).toFixed(2);
+        if (d && g && s) document.getElementById('fps-output').innerText = ((d / g) * s * 3.6).toFixed(2);
+    }
+
+    function calculateSkid() {
+        const d = parseFloat(document.getElementById('skid-distance').value);
+        const f = parseFloat(document.getElementById('friction').value);
+        if (d && f) document.getElementById('skid-output').innerText = Math.sqrt(254 * d * f).toFixed(2);
     }
 
     function calculateOverload() {
         const actual = parseFloat(document.getElementById('actual-weight').value);
         const limit = parseFloat(document.getElementById('limit-weight').value);
         const resArea = document.getElementById('result-area');
-        const statusText = document.getElementById('status-text');
-        const percentVal = document.getElementById('percent-val');
         const lawMsg = document.getElementById('law-msg');
 
-        if (!actual || !limit) { alert("請輸入完整重量數據"); return; }
-
+        if (!actual || !limit) return;
         resArea.style.display = "block";
         const diff = actual - limit;
         const percent = (diff / limit) * 100;
-        percentVal.innerText = percent.toFixed(2);
+        
+        document.getElementById('over-val').innerText = diff > 0 ? diff.toFixed(3) : 0;
+        document.getElementById('percent-val').innerText = percent.toFixed(2);
 
         if (diff <= 0) {
-            statusText.innerHTML = '<span class="safe">未超載</span>';
             lawMsg.style.display = "none";
         } else {
-            statusText.innerHTML = `超載 <span class="val">${diff.toFixed(3)}</span> 公噸`;
             lawMsg.style.display = "block";
-
             if (percent <= 10) {
-                // 10% 以下：勸導為主
                 lawMsg.className = "law-box law-advice";
                 lawMsg.innerText = "超載未逾10%。未嚴重危害交通安全、秩序，且情節輕微，以不舉發為適當。行為人發生交通事故，仍得舉發。";
             } else if (percent <= 20) {
-                // 10% - 20%：責令改正
                 lawMsg.className = "law-box law-info";
                 lawMsg.innerText = "未逾核定總重量20%者，責令其於二小時內改正之，逾二小時不改正者，得連續舉發。";
             } else {
-                // 超過 20%：禁止通行
                 lawMsg.className = "law-box law-warning";
                 lawMsg.innerText = "超載重量逾核定總重量20%者，當場禁止其通行。";
             }
