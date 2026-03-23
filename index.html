@@ -52,8 +52,11 @@
         button:active { transform: scale(0.98); opacity: 0.9; }
 
         .result-box { margin-top: 15px; padding: 15px; background: var(--input-bg); border-radius: 10px; border: 1px dashed var(--border-color); }
-        .res-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 16px; }
+        .res-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 16px; line-height: 1.4; }
         .val-text { color: #ffab40; font-weight: bold; }
+        
+        /* 罰鍰明細樣式 */
+        #fine-detail { font-size: 14px; color: #a0a0a0; margin-top: 5px; border-top: 1px solid #444; padding-top: 5px; }
     </style>
 </head>
 <body data-theme="dark">
@@ -132,7 +135,14 @@
             <button onclick="calcOver()" style="background:#FF3B30; color:white;">判定</button>
             <div id="res_over" class="result-box" style="display:none;">
                 <div class="res-row"><span>狀態：</span><span id="o_status" class="val-text"></span></div>
-                <div id="o_law" style="font-size:14px; margin-top:10px; color:#ffab40; line-height:1.5;"></div>
+                
+                <div class="res-row" id="fine-row" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px; display: none;">
+                    <span>應處罰鍰：</span>
+                    <span id="o_fine" class="val-text" style="color: #ff5252; font-size: 18px;">-</span>
+                </div>
+                <div id="fine-detail" style="display: none;"></div>
+
+                <div id="o_law" style="font-size:14px; margin-top:10px; color:#ffab40; line-height:1.6; border-top: 1px solid #444; padding-top: 10px;"></div>
             </div>
         </div>
     </div>
@@ -158,7 +168,6 @@
         }
     }
 
-    // 日期處理：支援民國輸入
     function getBaseDate(str) {
         if(!str || str.length < 6) return new Date();
         const yearLen = str.length - 4;
@@ -200,24 +209,81 @@
     function calcSkid() {
         const d=parseFloat(document.getElementById('d_skid').value);
         const f=parseFloat(document.getElementById('f_skid').value);
-        if(d&&f) document.getElementById('res_skid').innerText=Math.sqrt(254*d*f).toFixed(2);
+        if(d&&f) document.getElementById('res_skid').innerText=Math.sqrt(254 * d * f).toFixed(2);
     }
 
     function calcOver() {
         const a=parseFloat(document.getElementById('w_act').value);
         const l=parseFloat(document.getElementById('w_lim').value);
+        const resOver = document.getElementById('res_over');
+        const oStatus = document.getElementById('o_status');
+        const oFineRow = document.getElementById('fine-row');
+        const oFine = document.getElementById('o_fine');
+        const oFineDetail = document.getElementById('fine-detail');
+        const oLaw = document.getElementById('o_law');
+
         if(!a||!l) return;
         const diff = a-l; const per = (diff/l)*100;
-        document.getElementById('res_over').style.display="block";
-        document.getElementById('o_status').innerText = diff>0 ? `超載 ${diff.toFixed(3)} 噸 (${per.toFixed(2)}%)` : "未超載";
+        resOver.style.display="block";
+        oStatus.innerText = diff > 0 ? `超載 ${diff.toFixed(3)} 噸 (${per.toFixed(2)}%)` : "未超載";
+        
         let msg = "";
-        if(per > 20) msg = "🔴 逾20%：當場禁止通行。";
-        else if(per > 10) msg = "🔵 10%-20%：責令2小時內改正。";
-        else if(per > 0) msg = "🟢 未逾10%：建議勸導，免予舉發。";
-        document.getElementById('o_law').innerText = msg;
+        let fine = 0;
+        let fineDetailStr = "";
+
+        if(diff <= 0) {
+            // 未超載
+            oFineRow.style.display = "none";
+            oFineDetail.style.display = "none";
+            oLaw.style.display = "none";
+            return;
+        }
+
+        // 超載處理
+        oFineRow.style.display = "flex";
+        oFineDetail.style.display = "block";
+        oLaw.style.display = "block";
+
+        // 罰鍰計算：依據第 29-2 條第 3 項
+        // 1. 基本罰鍰
+        let baseFine = 10000;
+        
+        // 2. 加罰金額計算 (未滿一公噸以一公噸計算 -> 無條件進位)
+        const chargedTons = Math.ceil(diff);
+        let extraFinePerTon = 0;
+        
+        if (chargedTons > 30) {
+            extraFinePerTon = 5000;
+        } else if (chargedTons > 20) {
+            extraFinePerTon = 3000;
+        } else if (chargedTons > 10) {
+            extraFinePerTon = 2000;
+        } else {
+            extraFinePerTon = 1000;
+        }
+        
+        let extraFineTotal = chargedTons * extraFinePerTon;
+        fine = baseFine + extraFineTotal;
+
+        // 格式化千分位
+        oFine.innerText = `新臺幣 ${fine.toLocaleString()} 元`;
+        
+        // 罰鍰明細
+        fineDetailStr = `明細：基本 \$10,000 + (加罰計 ${chargedTons} 噸 × \$${extraFinePerTon.toLocaleString()})`;
+        oFineDetail.innerText = fineDetailStr;
+
+        // 法規處置與提示
+        if(per > 20) {
+            msg = "🔴 <b>超載逾 20%：</b><br>應責令當場卸貨分裝，當場禁止其通行。";
+        } else if(per > 10) {
+            // 已依照要求更改為黃色 (🔴🔵🟢 -> 🔴🟡🟢)
+            msg = "🟡 <b>超載 10% - 20%：</b><br>應當場卸貨分裝，或責令其於二小時內改正，逾二小時不改正者，得連續舉發。";
+        } else if(per > 0) {
+            msg = "🟢 <b>超載未逾 10%：</b><br>未嚴重危害交通安全、秩序，且情節輕微，以不舉發為適當。行為人發生交通事故，仍得舉發。";
+        }
+        oLaw.innerHTML = msg;
     }
 
-    // 初始執行
     updateDates();
 </script>
 </body>
