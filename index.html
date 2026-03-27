@@ -1,278 +1,193 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小港交通分隊勤務工具</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交通執法工具箱</title>
     <style>
         :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #2d2d2d;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --sidebar-bg: #000000;
             --text-color: #e0e0e0;
-            --accent-color: #8ab4f8;
-            --input-bg: #3d3d3d;
-            --border-color: #444444;
+            --accent-color: #007aff;
+            --highlight: #ffcc00;
         }
 
-        [data-theme="light"] {
-            --bg-color: #f5f5f2;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --input-bg: #fafafa;
-            --border-color: #dddddd;
+        body {
+            font-family: -apple-system, "Noto Sans TC", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
         }
 
-        body { font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; transition: 0.3s; overflow-x: hidden; touch-action: pan-y; }
-        
-        .navbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: var(--card-bg); box-shadow: 0 2px 8px rgba(0,0,0,0.4); position: sticky; top: 0; z-index: 100; }
-        .menu-btn { font-size: 24px; cursor: pointer; color: var(--accent-color); padding: 5px; }
-        .theme-toggle { font-size: 20px; cursor: pointer; padding: 5px; }
+        /* 左側側邊欄 */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            background-color: var(--sidebar-bg);
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #333;
+        }
 
-        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--card-bg); box-shadow: 5px 0 15px rgba(0,0,0,0.5); transition: 0.3s; z-index: 1000; padding-top: 60px; }
-        .sidebar.active { left: 0; }
-        .sidebar-item { padding: 18px 25px; font-size: 16px; cursor: pointer; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; }
-        .sidebar-item:active { background: var(--input-bg); }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 999; }
-        .overlay.active { display: block; }
+        .sidebar-header {
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-align: center;
+        }
 
-        .page { display: none; padding: 20px; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
-        .page.active { display: flex; }
-        .card { background: var(--card-bg); padding: 22px; border-radius: 16px; width: 100%; max-width: 400px; margin-bottom: 20px; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        h2 { margin-top: 0; font-size: 18px; color: var(--accent-color); border-left: 5px solid var(--accent-color); padding-left: 12px; margin-bottom: 20px; }
-        
-        .input-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 6px; font-size: 14px; opacity: 0.8; }
-        input, select { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 16px; background: var(--input-bg); color: var(--text-color); box-sizing: border-box; outline: none; }
-        
-        /* 下拉選單顏色分類 */
-        option.asphalt { background-color: #222; color: #fff; }
-        option.concrete { background-color: #555; color: #fff; }
-        option.gravel { background-color: #8b4513; color: #fff; }
+        /* 搜尋框樣式 */
+        .search-container {
+            padding: 10px 15px;
+        }
 
-        button { width: 100%; padding: 15px; background-color: var(--accent-color); color: #000; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; margin-top: 5px; cursor: pointer; }
-        .result-box { margin-top: 15px; padding: 15px; background: var(--input-bg); border-radius: 10px; border: 1px dashed var(--border-color); }
-        .res-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 16px; }
-        .val-text { color: #ffab40; font-weight: bold; }
-        #fine-detail { font-size: 14px; color: #a0a0a0; margin-top: 5px; border-top: 1px solid #444; padding-top: 5px; }
+        #lawSearch {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #222;
+            color: white;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        #lawSearch:focus {
+            border-color: var(--accent-color);
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        /* 主內容區 */
+        .main-content {
+            margin-left: 240px;
+            padding: 25px;
+            width: calc(100% - 240px);
+            min-height: 100vh;
+        }
+
+        .law-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--highlight);
+            transition: transform 0.1s;
+        }
+
+        .law-no {
+            color: var(--highlight);
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .law-text {
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+        }
+
+        .loading-spinner {
+            text-align: center;
+            margin-top: 100px;
+            color: #888;
+        }
+
+        /* 隱藏不符合搜尋條件的卡片 */
+        .hidden { display: none; }
     </style>
 </head>
-<body data-theme="dark">
+<body>
 
-    <div class="navbar">
-        <div class="menu-btn" onclick="toggleMenu()">☰</div>
-        <div style="font-weight:bold; letter-spacing: 1px;">小港交通分隊</div>
-        <div class="theme-toggle" onclick="toggleTheme()" id="theme-icon">☀️</div>
-    </div>
-
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-item" onclick="showPage('home')">🏠 勤務首頁 (日期/年齡)</div>
-        <div class="sidebar-item" onclick="showPage('fps')">⏱️ 時速換算 (FPS)</div>
-        <div class="sidebar-item" onclick="showPage('skid')">🚗 車速換算 (煞車痕)</div>
-        <div class="sidebar-item" onclick="showPage('overload')">🚚 超載計算器</div>
-    </div>
-    <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-
-    <div id="home" class="page active">
-        <div class="card">
-            <h2>一、到案日期試算</h2>
-            <div class="input-group">
-                <label>舉發日期 (民國，如 1150323)</label>
-                <input type="number" id="cite-date" placeholder="預設今日" oninput="updateDates()">
-            </div>
-            <div class="result-box">
-                <div class="res-row"><span>30天到案：</span><span id="date-30" class="val-text">-</span></div>
-                <div class="res-row"><span>45天到案：</span><span id="date-45" class="val-text">-</span></div>
-            </div>
-        </div>
-        <div class="card">
-            <h2>二、年齡計算</h2>
-            <div class="input-group">
-                <label>出生年月日 (民國，如 0810108)</label>
-                <input type="number" id="birth-date" oninput="updateAge()">
-            </div>
-            <div class="result-box">
-                <div class="res-row"><span>當前年齡：</span><span id="age-result" class="val-text">?</span> 歲</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="fps" class="page">
-        <div class="card">
-            <h2>⏱️ 時速換算 (FPS)</h2>
-            <div class="input-group"><label>距離 (m)</label><input type="number" id="d_fps"></div>
-            <div class="input-group"><label>總格數</label><input type="number" id="g_fps"></div>
-            <div class="input-group"><label>每秒格數</label><input type="number" id="s_fps" value="30"></div>
-            <button onclick="calcFPS()">換算</button>
-            <div class="result-box">時速結果：<span id="res_fps" class="val-text">0</span> km/hr</div>
-        </div>
-    </div>
-
-    <div id="skid" class="page">
-        <div class="card" style="border-top-color: #34C759;">
-            <h2>🚗 車速換算 (煞車痕)</h2>
-            <div class="input-group">
-                <label>路面摩擦係數參考 (f)</label>
-                <select id="f_skid_select">
-                    <option class="asphalt" value="0.85">瀝青乾燥 (新築) 0.85</option>
-                    <option class="asphalt" value="0.75" selected>瀝青乾燥 (1-3年) 0.75</option>
-                    <option class="asphalt" value="0.70">瀝青乾燥 (3年以上) 0.70</option>
-                    <option class="asphalt" value="0.80">瀝青潮濕 (新築) 0.80</option>
-                    <option class="asphalt" value="0.65">瀝青潮濕 (1-3年) 0.65</option>
-                    <option class="asphalt" value="0.60">瀝青潮濕 (3年以上) 0.60</option>
-                    <option class="concrete" value="0.90">混凝土乾燥 (新築) 0.90</option>
-                    <option class="concrete" value="0.78">混凝土乾燥 (1-3年) 0.78</option>
-                    <option class="concrete" value="0.70">混凝土乾燥 (3年以上) 0.70</option>
-                    <option class="concrete" value="0.78">混凝土潮濕 (新築) 0.78</option>
-                    <option class="concrete" value="0.70">混凝土潮濕 (1-3年) 0.70</option>
-                    <option class="concrete" value="0.62">混凝土潮濕 (3年以上) 0.62</option>
-                    <option class="gravel" value="0.68">砂石 0.68</option>
-                </select>
-            </div>
-            <div class="input-group"><label>煞車痕長度 (m)</label><input type="number" id="d_skid"></div>
-            <button onclick="calcSkid()" style="background:#34C759; color:white;">計算</button>
-            <div class="result-box">估計時速：<span id="res_skid" class="val-text" style="color:#34C759">0</span> km/hr</div>
-        </div>
-    </div>
-
-    <div id="overload" class="page">
-        <div class="card" style="border-top-color: #FF3B30;">
-            <h2>🚚 超載計算器</h2>
-            <div class="input-group"><label>實際總重 (公噸)</label><input type="number" id="w_act"></div>
-            <div class="input-group"><label>核定總重 (公噸)</label><input type="number" id="w_lim"></div>
-            <button onclick="calcOver()" style="background:#FF3B30; color:white;">判定</button>
-            <div id="res_over" class="result-box" style="display:none;">
-                <div class="res-row"><span>狀態：</span><span id="o_status" class="val-text"></span></div>
-                <div class="res-row" id="fine-row" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px; display: none;">
-                    <span>應處罰鍰：</span><span id="o_fine" class="val-text" style="color: #ff5252; font-size: 18px;">-</span>
-                </div>
-                <div id="fine-detail" style="display: none;"></div>
-                <div id="o_law" style="font-size:14px; margin-top:10px; color:#ffab40; line-height:1.6; border-top: 1px solid #444; padding-top: 10px;"></div>
-            </div>
-        </div>
-    </div>
-
-<script>
-    // 側邊選單手勢滑動邏輯
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
-    document.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    }, false);
-
-    function handleSwipe() {
-        const threshold = 100; // 滑動門檻
-        if (touchEndX - touchStartX > threshold) toggleMenu(true); // 左往右滑：開啟
-        if (touchStartX - touchEndX > threshold) toggleMenu(false); // 右往左滑：關閉
-    }
-
-    function toggleMenu(forceState) {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const isActive = (typeof forceState === 'boolean') ? forceState : !sidebar.classList.contains('active');
+    <div class="sidebar">
+        <div class="sidebar-header">交通執法助手</div>
         
-        sidebar.classList.toggle('active', isActive);
-        overlay.classList.toggle('active', isActive);
-    }
+        <div class="search-container">
+            <input type="text" id="lawSearch" placeholder="搜尋條號 (如: 43)..." onkeyup="filterLaws()">
+        </div>
 
-    function showPage(pId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pId).classList.add('active');
-        toggleMenu(false);
-    }
+        <div class="menu-item" onclick="showCalc()">計算工具</div>
+        <div class="menu-item active" onclick="fetchLaw()">處罰條例</div>
+    </div>
 
-    function toggleTheme() {
-        const b = document.body; const icon = document.getElementById('theme-icon');
-        if(b.getAttribute('data-theme')==='light'){
-            b.setAttribute('data-theme','dark'); icon.innerText='☀️';
-        } else {
-            b.setAttribute('data-theme','light'); icon.innerText='🌙';
+    <div class="main-content" id="display-area">
+        <div class="loading-spinner">請稍候，正在取得最新法條資料...</div>
+    </div>
+
+    <script>
+        let allArticles = []; // 儲存抓取到的法條暫存
+
+        async function fetchLaw() {
+            const display = document.getElementById('display-area');
+            display.innerHTML = '<div class="loading-spinner">📡 正在同步全國法規資料庫...</div>';
+
+            try {
+                // 串接法務部 API
+                const response = await fetch('https://law.moj.gov.tw/api/Law/GetLawAll?PCode=K0040012');
+                const data = await response.json();
+                allArticles = data.LawArticles;
+                renderLaws(allArticles);
+            } catch (error) {
+                display.innerHTML = `
+                    <div style="color: #ff6b6b; background: #2a1010; padding: 20px; border-radius: 8px;">
+                        <strong>連線失敗</strong><br>
+                        可能是公司網路封鎖了政府 API 網域。請嘗試使用個人熱點，或直接訪問官方網站。
+                    </div>`;
+            }
         }
-    }
 
-    function getBaseDate(str) {
-        if(!str || str.length < 6) return new Date();
-        const yearLen = str.length - 4;
-        const y = parseInt(str.substring(0, yearLen)) + 1911;
-        const m = parseInt(str.substring(yearLen, yearLen + 2)) - 1;
-        const d = parseInt(str.substring(yearLen + 2));
-        return new Date(y, m, d);
-    }
+        function renderLaws(articles) {
+            const display = document.getElementById('display-area');
+            let html = '<h1>道路交通管理處罰條例</h1>';
+            
+            articles.forEach(item => {
+                html += `
+                    <div class="law-card" data-no="${item.ArticleNo}">
+                        <div class="law-no">${item.ArticleNo}</div>
+                        <div class="law-text">${item.ArticleContent.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            });
+            display.innerHTML = html;
+        }
 
-    function toROCStr(d) {
-        return `${d.getFullYear()-1911}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-    }
+        // 搜尋過濾功能
+        function filterLaws() {
+            const input = document.getElementById('lawSearch').value.toLowerCase();
+            const cards = document.getElementsByClassName('law-card');
 
-    function updateDates() {
-        const base = getBaseDate(document.getElementById('cite-date').value);
-        let d30 = new Date(base); d30.setDate(base.getDate() + 30);
-        let d45 = new Date(base); d45.setDate(base.getDate() + 45);
-        document.getElementById('date-30').innerText = toROCStr(d30);
-        document.getElementById('date-45').innerText = toROCStr(d45);
-    }
+            for (let card of cards) {
+                const articleNo = card.getAttribute('data-no').toLowerCase();
+                // 判斷條號是否包含輸入的文字
+                if (articleNo.includes(input)) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            }
+        }
 
-    function updateAge() {
-        const val = document.getElementById('birth-date').value;
-        if(val.length < 6) return;
-        const birth = getBaseDate(val); const now = new Date();
-        let age = now.getFullYear() - birth.getFullYear();
-        const mDiff = now.getMonth() - birth.getMonth();
-        if (mDiff < 0 || (mDiff === 0 && now.getDate() < birth.getDate())) age--;
-        document.getElementById('age-result').innerText = age > 0 ? age : 0;
-    }
+        function showCalc() {
+            document.getElementById('display-area').innerHTML = '<h1>計算工具</h1><p>（請在此處嵌入您的 A1/A2 統計與超載計算代碼）</p>';
+        }
 
-    function calcFPS() {
-        const d=parseFloat(document.getElementById('d_fps').value);
-        const g=parseFloat(document.getElementById('g_fps').value);
-        const s=parseFloat(document.getElementById('s_fps').value);
-        if(d&&g&&s) document.getElementById('res_fps').innerText=((d/g)*s*3.6).toFixed(2);
-    }
-
-    function calcSkid() {
-        const d=parseFloat(document.getElementById('d_skid').value);
-        const f=parseFloat(document.getElementById('f_skid_select').value);
-        if(d && f) document.getElementById('res_skid').innerText = Math.sqrt(254 * d * f).toFixed(2);
-    }
-
-    function calcOver() {
-        const a=parseFloat(document.getElementById('w_act').value);
-        const l=parseFloat(document.getElementById('w_lim').value);
-        const resOver = document.getElementById('res_over');
-        const oStatus = document.getElementById('o_status');
-        const oFineRow = document.getElementById('fine-row');
-        const oFine = document.getElementById('o_fine');
-        const oFineDetail = document.getElementById('fine-detail');
-        const oLaw = document.getElementById('o_law');
-
-        if(!a||!l) return;
-        const diff = a-l; const per = (diff/l)*100;
-        resOver.style.display="block";
-        oStatus.innerText = diff > 0 ? `超載 ${diff.toFixed(3)} 噸 (${per.toFixed(2)}%)` : "未超載";
-        
-        if(diff <= 0) { oFineRow.style.display = "none"; oFineDetail.style.display = "none"; oLaw.style.display = "none"; return; }
-
-        oFineRow.style.display = "flex"; oFineDetail.style.display = "block"; oLaw.style.display = "block";
-        const chargedTons = Math.ceil(diff);
-        let extra = 0;
-        if (chargedTons > 30) extra = 5000;
-        else if (chargedTons > 20) extra = 3000;
-        else if (chargedTons > 10) extra = 2000;
-        else extra = 1000;
-        
-        let fine = 10000 + (chargedTons * extra);
-        oFine.innerText = `新臺幣 ${fine.toLocaleString()} 元`;
-        oFineDetail.innerText = `明細：基本 \$10,000 + (加罰計 ${chargedTons} 噸 × \$${extra.toLocaleString()})`;
-
-        let msg = "";
-        if(per > 20) msg = "🔴 <b>超載逾 20%：</b><br>應責令當場卸貨分裝，當場禁止其通行。";
-        else if(per > 10) msg = "🟡 <b>超載 10% - 20%：</b><br>應當場卸貨分裝，或責令其於二小時內改正，逾二小時不改正者，得連續舉發。";
-        else msg = "🟢 <b>超載未逾 10%：</b><br>未嚴重危害交通安全、秩序，且情節輕微，以不舉發為適當。行為人發生交通事故，仍得舉發。";
-        oLaw.innerHTML = msg;
-    }
-
-    updateDates();
-</script>
+        // 初始化載入
+        window.onload = fetchLaw;
+    </script>
 </body>
 </html>
