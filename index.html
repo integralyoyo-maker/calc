@@ -5,84 +5,158 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>小港交通分隊勤務工具</title>
     <style>
+    /* 核心全局變數 */
+    :root {
+        --bg-color: #1a1a1a;
+        --card-bg: #2d2d2d;
+        --text-color: #e0e0e0;
+        --accent-color: #8ab4f8;
+        --input-bg: #3d3d3d;
+        --border-color: #444444;
+    }
 
-        .law-content {
-            font-size: 15px;
-            white-space: pre-wrap; /* 保持原始 JSON 中的換行 */
-            word-wrap: break-word;
-        }
-        
-        /* 針對「款」進行自動縮排 (如果是以一、二、三開頭) */
-        .law-content-line {
-            display: block;
-            padding-left: 2em;
-            text-indent: -2em;
-            margin-bottom: 4px;
-        }
-                
-        
-        /* 條號標題 (如：第 43 條) */
-        .law-no-header {
-            background: var(--input-bg);
-            padding: 8px 15px;
-            font-weight: bold;
-            color: var(--accent-color);
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .law-body-content {
-            padding: 10px 15px;
-        }
-        
-        /* 「項」的整行樣式 */
-        .law-item-row {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 8px;
-            line-height: 1.6;
-        }
-        
-        /* 圓圈數字樣式 */
-        .item-num {
-            color: var(--accent-color);
-            font-weight: bold;
-            margin-right: 8px;
-            flex-shrink: 0; /* 防止數字被擠壓 */
-            font-size: 1.1em;
-        }
-        
-        /* 「款」的縮排樣式 (一、二、三...) */
-        .law-sub-row {
-            padding-left: 28px; /* 留出空間對齊上面的文字 */
-            margin-bottom: 4px;
-            opacity: 0.9;
-            font-size: 0.95em;
-        }
-               /* 大標題專用樣式 */
-        .law-chapter-header {
-            width: 100%;
-            text-align: center;
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin: 30px 0 15px 0;
-            padding: 10px 0;
-            /* 這裡只給上下底線，不給框 */
-            border-top: 2px solid var(--border-color);
-            border-bottom: 2px solid var(--border-color);
-            background: transparent; 
-        }
-        
-        /* 調整原本卡片的間距 */
-        .law-card-box {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            margin-bottom: 15px;
-            text-align: left;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-    </style>
+    [data-theme="light"] {
+        --bg-color: #f5f5f2;
+        --card-bg: #ffffff;
+        --text-color: #333333;
+        --input-bg: #fafafa;
+        --border-color: #dddddd;
+    }
+
+    /* 基礎排版設定 */
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 0;
+        transition: 0.3s;
+        overflow-x: hidden;
+    }
+
+    /* 導航欄與選單 */
+    .navbar {
+        height: 60px;
+        background: var(--card-bg);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        width: 280px;
+        height: 100%;
+        background: var(--card-bg);
+        z-index: 2001;
+        transition: 0.3s;
+        padding-top: 60px;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+    }
+
+    .sidebar.active { left: 0; }
+
+    .sidebar-item {
+        padding: 15px 25px;
+        font-size: 1.1rem;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        z-index: 2000;
+    }
+    .overlay.active { display: block; }
+
+    /* 頁面與卡片 */
+    .page { display: none; padding: 20px; flex-direction: column; align-items: center; }
+    .page.active { display: flex; }
+
+    .card {
+        background: var(--card-bg);
+        padding: 22px;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 450px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        border-top: 4px solid var(--accent-color);
+    }
+
+    h2 { margin-top: 0; font-size: 1.2rem; color: var(--accent-color); }
+
+    /* 輸入框與按鈕 */
+    .input-group { margin-bottom: 15px; text-align: left; }
+    label { display: block; margin-bottom: 8px; font-size: 0.9rem; opacity: 0.8; }
+    input, select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        border-radius: 10px;
+        border: none;
+        background: var(--accent-color);
+        color: #000;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    /* 結果顯示盒 */
+    .result-box {
+        background: rgba(0,0,0,0.2);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        text-align: left;
+    }
+    .res-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .val-text { font-weight: bold; color: var(--accent-color); }
+
+    /* 法條查詢專用樣式 */
+    .law-card-box {
+        background: var(--input-bg);
+        border-radius: 10px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        overflow: hidden;
+    }
+    .law-no-header {
+        background: rgba(255,255,255,0.05);
+        padding: 10px 15px;
+        font-weight: bold;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .law-item-row { display: flex; padding: 5px 15px; font-size: 0.95rem; }
+    .item-num { color: var(--accent-color); margin-right: 8px; font-weight: bold; }
+    .law-sub-row { padding-left: 35px; opacity: 0.8; font-size: 0.9rem; margin-bottom: 5px; }
+    .law-chapter-header {
+        text-align: center; font-weight: bold; margin: 25px 0 10px; 
+        color: var(--accent-color); border-bottom: 1px solid var(--border-color);
+    }
+</style>
+
 </head>
 <body data-theme="dark">
 
