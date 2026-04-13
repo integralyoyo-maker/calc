@@ -74,6 +74,7 @@
         <div class="sidebar-item" onclick="showPage('fps')">⏱️ 時速換算 (FPS)</div>
         <div class="sidebar-item" onclick="showPage('skid')">🚗 車速換算 (煞車痕)</div>
         <div class="sidebar-item" onclick="showPage('overload')">🚚 超載計算器</div>
+        <div class="sidebar-item" onclick="showLawPage()">⚖️ 處罰條例查詢</div>
     </div>
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
@@ -162,6 +163,15 @@
         </div>
     </div>
 
+    <div id="law-page" class="page">
+    <div class="card" style="max-width: 600px;">
+        <h2>⚖️ 處罰條例查詢</h2>
+        <input type="text" id="law-search-box" placeholder="輸入條號 (如: 43)..." onkeyup="filterLaws()" style="margin-bottom: 15px;">
+        <div id="law-container" style="max-height: 60vh; overflow-y: auto;">
+            <div class="loading">請點選側邊欄載入法條...</div>
+        </div>
+    </div>
+</div>
 <script>
     // 側邊選單手勢
     let touchStartX = 0;
@@ -277,7 +287,41 @@
         else msg = "🟢 <b>超載未逾 10%：</b><br>未嚴重危害交通安全、秩序，且情節輕微，以不舉發為適當。行為人發生交通事故，仍得舉發。";
         oLaw.innerHTML = msg;
     }
+       async function showLawPage() {
+       showPage('law-page'); // 切換到法條頁面
+       const container = document.getElementById('law-container');
+    
+       // 如果已經載入過就不重複執行
+       if (typeof allArticles !== 'undefined' && allArticles.length > 0) return;
 
+       try {
+           const response = await fetch('./traffic_law.json');
+           const data = await response.json();
+           // 根據您 JSON 的格式取出 LawArticles
+           window.allArticles = data.LawArticles || data; 
+           renderLaws(window.allArticles);
+       } catch (e) {
+           container.innerHTML = "❌ 讀取 traffic_law.json 失敗，請確認檔案在同目錄。";
+       }
+   }
+
+   function renderLaws(articles) {
+       const container = document.getElementById('law-container');
+       container.innerHTML = articles.map(item => `
+           <div style="padding:10px; border-bottom:1px solid var(--border-color); margin-bottom:5px;">
+               <b style="color:var(--accent-color);">${item.ArticleNo}</b><br>
+               <span style="font-size:14px;">${item.ArticleContent.replace(/\n/g, '<br>')}</span>
+           </div>
+       `).join('');
+   }
+
+   function filterLaws() {
+       const term = document.getElementById('law-search-box').value;
+       if (!window.allArticles) return;
+       const filtered = window.allArticles.filter(a => a.ArticleNo.includes(term) || a.ArticleContent.includes(term));
+       renderLaws(filtered);
+   }
+    
     updateDates();
 </script>
 </body>
