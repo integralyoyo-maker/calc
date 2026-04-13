@@ -143,18 +143,19 @@
             opacity: 0.9;
             font-size: 0.95em;
         }
-        /* 「第 X 章」大標題樣式 */
-        .law-chapter-title {
+               /* 大標題專用樣式 */
+        .law-chapter-header {
             width: 100%;
             text-align: center;
-            font-size: 20px;
+            font-size: 1.25rem;
             font-weight: bold;
             color: var(--accent-color);
             margin: 30px 0 15px 0;
-            padding: 10px;
+            padding: 10px 0;
+            /* 這裡只給上下底線，不給框 */
             border-top: 2px solid var(--border-color);
             border-bottom: 2px solid var(--border-color);
-            background: transparent; /* 確保沒有框框背景 */
+            background: transparent; 
         }
         
         /* 調整原本卡片的間距 */
@@ -420,16 +421,17 @@
     }
 
     container.innerHTML = articles.map(item => {
-        // 判斷是否為「章」或「節」的大標題 (ArticleType 通常為 "C")
-        // 或者條號為空、內容包含「第 X 章」字眼
-        const isChapter = item.ArticleType === "C" || item.ArticleNo === "" || /第.*章/.test(item.ArticleContent);
+        // --- Bug 修正點 1：精準判斷是否為「章/節標題」 ---
+        // 判斷條件：ArticleType 是 "C" 或者是 ArticleNo 為空
+        const isChapter = item.ArticleType === "C" || !item.ArticleNo || item.ArticleNo.trim() === "";
 
         if (isChapter) {
-            // 大標題：不給框、不給數字標記，單獨美化
-            return `<div class="law-chapter-title">${item.ArticleContent.trim()}</div>`;
+            // 清理標題文字（去掉多餘空白）
+            const titleText = item.ArticleContent.replace(/\s+/g, ' ').trim();
+            return `<div class="law-chapter-header">${titleText}</div>`;
         }
 
-        // 一般條文：給卡片框與數字項次
+        // --- 一般條文處理 ---
         const rawLines = item.ArticleContent.split(/\r?\n/);
         let itemCounter = 0;
         
@@ -437,9 +439,13 @@
             const trimmedLine = line.trim();
             if (!trimmedLine) return ""; 
 
+            // 判斷是否為「款」(例如：一、二、三...)
             const isSubItem = /^[一二三四五六七八九十]+、/.test(trimmedLine);
             
             if (!isSubItem) {
+                // 如果該行包含「第 X 條」或是該條文只有一行且跟條號一樣，不編號
+                if (trimmedLine.includes(item.ArticleNo)) return ""; 
+
                 itemCounter++;
                 const circleNum = getCircleNum(itemCounter);
                 return `<div class="law-item-row"><span class="item-num">${circleNum}</span>${trimmedLine}</div>`;
