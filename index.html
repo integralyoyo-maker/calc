@@ -96,6 +96,53 @@
             text-indent: -2em;
             margin-bottom: 4px;
         }
+                /* 法條卡片外框 */
+        .law-card-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            text-align: left;
+        }
+        
+        /* 條號標題 (如：第 43 條) */
+        .law-no-header {
+            background: var(--input-bg);
+            padding: 8px 15px;
+            font-weight: bold;
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .law-body-content {
+            padding: 10px 15px;
+        }
+        
+        /* 「項」的整行樣式 */
+        .law-item-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        
+        /* 圓圈數字樣式 */
+        .item-num {
+            color: var(--accent-color);
+            font-weight: bold;
+            margin-right: 8px;
+            flex-shrink: 0; /* 防止數字被擠壓 */
+            font-size: 1.1em;
+        }
+        
+        /* 「款」的縮排樣式 (一、二、三...) */
+        .law-sub-row {
+            padding-left: 28px; /* 留出空間對齊上面的文字 */
+            margin-bottom: 4px;
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
     </style>
 </head>
 <body data-theme="dark">
@@ -343,35 +390,52 @@
    }
 
        function renderLaws(articles) {
-        const container = document.getElementById('law-container');
-        if (!articles || articles.length === 0) {
-            container.innerHTML = "找不到相關條文";
-            return;
-        }
-    
-        container.innerHTML = articles.map(item => {
-            // 將內容依照換行符號切割成陣列
-            const lines = item.ArticleContent.split(/\r?\n/);
-            
-            // 處理每一行，讓「款」(一、二...) 自動有層次感
-            const formattedContent = lines.map(line => {
-                const trimmedLine = line.trim();
-                if (!trimmedLine) return ""; // 跳過空行
-                
-                // 如果是以「一、」「二、」等開頭，加入特定 class
-                const isSubItem = /^[一二三四五六七八九十]+、/.test(trimmedLine);
-                return `<span class="${isSubItem ? 'law-content-line' : ''}">${trimmedLine}</span>`;
-            }).join('');
-    
-            return `
-                <div class="law-item">
-                    <span class="law-no-title">${item.ArticleNo}</span>
-                    <div class="law-content">${formattedContent}</div>
-                </div>
-            `;
-        }).join('');
+    const container = document.getElementById('law-container');
+    if (!articles || articles.length === 0) {
+        container.innerHTML = "找不到相關條文";
+        return;
     }
 
+    container.innerHTML = articles.map(item => {
+        // 1. 先把內容依照換行符號切開
+        const rawLines = item.ArticleContent.split(/\r?\n/);
+        
+        // 2. 濾掉空白行，並判斷哪一行是「項」，哪一行是「款」
+        let itemCounter = 0; // 用來計算「第幾項」的計數器
+        
+        const formattedContent = rawLines.map(line => {
+            const trimmedLine = line.trim();
+            if (!trimmedLine) return ""; 
+
+            // 判斷是否為「款」(例如：一、二、三...)
+            const isSubItem = /^[一二三四五六七八九十]+、/.test(trimmedLine);
+            
+            if (!isSubItem) {
+                // 如果不是「款」，那就是「項」，幫它補上數字圓圈標記
+                itemCounter++;
+                // 使用 Unicode 圓圈數字 (①, ②, ③...)，或是直接用數字 (1., 2.)
+                const circleNum = getCircleNum(itemCounter);
+                return `<div class="law-item-row"><span class="item-num">${circleNum}</span>${trimmedLine}</div>`;
+            } else {
+                // 如果是「款」，則進行縮排處理，不給圓圈數字
+                return `<div class="law-sub-row">${trimmedLine}</div>`;
+            }
+        }).join('');
+
+        return `
+            <div class="law-card-box">
+                <div class="law-no-header">${item.ArticleNo}</div>
+                <div class="law-body-content">${formattedContent}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+// 輔助函數：轉換數字為圓圈數字 (支援到 20 項，道交條例夠用了)
+function getCircleNum(n) {
+    const circles = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮", "⑯", "⑰", "⑱", "⑲", "⑳"];
+    return circles[n] || `${n}.`;
+}
           function filterLaws() {
             const term = document.getElementById('law-search-box').value.trim();
             if (!window.allArticles) return;
