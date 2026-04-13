@@ -143,6 +143,29 @@
             opacity: 0.9;
             font-size: 0.95em;
         }
+        /* 「第 X 章」大標題樣式 */
+        .law-chapter-title {
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 30px 0 15px 0;
+            padding: 10px;
+            border-top: 2px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+            background: transparent; /* 確保沒有框框背景 */
+        }
+        
+        /* 調整原本卡片的間距 */
+        .law-card-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            text-align: left;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body data-theme="dark">
@@ -397,27 +420,30 @@
     }
 
     container.innerHTML = articles.map(item => {
-        // 1. 先把內容依照換行符號切開
+        // 判斷是否為「章」或「節」的大標題 (ArticleType 通常為 "C")
+        // 或者條號為空、內容包含「第 X 章」字眼
+        const isChapter = item.ArticleType === "C" || item.ArticleNo === "" || /第.*章/.test(item.ArticleContent);
+
+        if (isChapter) {
+            // 大標題：不給框、不給數字標記，單獨美化
+            return `<div class="law-chapter-title">${item.ArticleContent.trim()}</div>`;
+        }
+
+        // 一般條文：給卡片框與數字項次
         const rawLines = item.ArticleContent.split(/\r?\n/);
-        
-        // 2. 濾掉空白行，並判斷哪一行是「項」，哪一行是「款」
-        let itemCounter = 0; // 用來計算「第幾項」的計數器
+        let itemCounter = 0;
         
         const formattedContent = rawLines.map(line => {
             const trimmedLine = line.trim();
             if (!trimmedLine) return ""; 
 
-            // 判斷是否為「款」(例如：一、二、三...)
             const isSubItem = /^[一二三四五六七八九十]+、/.test(trimmedLine);
             
             if (!isSubItem) {
-                // 如果不是「款」，那就是「項」，幫它補上數字圓圈標記
                 itemCounter++;
-                // 使用 Unicode 圓圈數字 (①, ②, ③...)，或是直接用數字 (1., 2.)
                 const circleNum = getCircleNum(itemCounter);
                 return `<div class="law-item-row"><span class="item-num">${circleNum}</span>${trimmedLine}</div>`;
             } else {
-                // 如果是「款」，則進行縮排處理，不給圓圈數字
                 return `<div class="law-sub-row">${trimmedLine}</div>`;
             }
         }).join('');
