@@ -5,6 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>小港交通分隊勤務工具</title>
     <style>
+        /* 法規頂部資訊 */
+.law-info-header {
+    background: var(--card-bg);
+    border-left: 5px solid var(--accent-color);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    text-align: left;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.law-date-row {
+    font-size: 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    opacity: 0.8;
+    margin-top: 5px;
+}
+
+/* 大標題（第一章等） */
+.law-chapter-header {
+    width: 100%;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    margin: 25px 0 15px 0;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* 法條卡片與項次 */
+.law-card-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 15px;
+    text-align: left;
+}
+.law-no-header {
+    background: var(--input-bg);
+    padding: 8px 15px;
+    font-weight: bold;
+    color: var(--accent-color);
+    border-bottom: 1px solid var(--border-color);
+}
+.law-item-row {
+    display: flex;
+    padding: 5px 15px;
+    line-height: 1.6;
+}
+.item-num {
+    color: var(--accent-color);
+    font-weight: bold;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+.law-sub-row {
+    padding: 2px 15px 2px 38px;
+    font-size: 0.95em;
+    opacity: 0.9;
+}
+
+        
+        
+        
         /* 完全自定義顏色，不讀取外部 CSS */
         :root {
             --bg-color: #1a1a1a;
@@ -395,73 +462,65 @@
         else msg = "🟢 <b>超載未逾 10%：</b><br>未嚴重危害交通安全、秩序，且情節輕微，以不舉發為適當。行為人發生交通事故，仍得舉發。";
         oLaw.innerHTML = msg;
     }
-       async function showLawPage() {
-       showPage('law-page'); // 切換到法條頁面
-       const container = document.getElementById('law-container');
-    
-       // 如果已經載入過就不重複執行
-       if (typeof allArticles !== 'undefined' && allArticles.length > 0) return;
-
-       try {
-           const response = await fetch('./traffic_law.json');
-           const data = await response.json();
-           // 根據您 JSON 的格式取出 LawArticles
-           window.allArticles = data.LawArticles || data; 
-           renderLaws(window.allArticles);
-       } catch (e) {
-           container.innerHTML = "❌ 讀取 traffic_law.json 失敗，請確認檔案在同目錄。";
-       }
-   }
-
-       function renderLaws(articles) {
+// 顯示法條頁面並讀取資料
+async function showLawPage() {
+    showPage('law-page');
     const container = document.getElementById('law-container');
-    if (!articles || articles.length === 0) {
-        container.innerHTML = "找不到相關條文";
-        return;
+    if (window.allArticles && window.allArticles.length > 0) return;
+
+    try {
+        const response = await fetch('./traffic_law.json');
+        const data = await response.json();
+        window.allArticles = data.LawArticles;
+
+        // 建立頂部資訊 HTML
+        const headerHtml = `
+            <div class="law-info-header">
+                <div style="font-weight:bold; color:var(--accent-color);">${data.LawName}</div>
+                <div class="law-date-row">
+                    <span>📅 修正：${data.LawModifiedDate || '2026/03/13'}</span>
+                    <span>🚀 施行：${data.LawEffectiveDate || '2026/03/13'}</span>
+                </div>
+            </div>`;
+
+        renderLaws(window.allArticles, headerHtml);
+    } catch (e) {
+        container.innerHTML = "讀取 traffic_law.json 失敗";
     }
+}
 
-    container.innerHTML = articles.map(item => {
-        // --- Bug 修正點 1：精準判斷是否為「章/節標題」 ---
-        // 判斷條件：ArticleType 是 "C" 或者是 ArticleNo 為空
-        const isChapter = item.ArticleType === "C" || !item.ArticleNo || item.ArticleNo.trim() === "";
+// 渲染法條
+function renderLaws(articles, headerHtml = "") {
+    const container = document.getElementById('law-container');
+    const getCircle = (n) => ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"][n] || `${n}.`;
 
-        if (isChapter) {
-            // 清理標題文字（去掉多餘空白）
-            const titleText = item.ArticleContent.replace(/\s+/g, ' ').trim();
-            return `<div class="law-chapter-header">${titleText}</div>`;
+    const listHtml = articles.map(item => {
+        // 判斷是否為「章標題」
+        if (item.ArticleType === "C" || !item.ArticleNo) {
+            return `<div class="law-chapter-header">${item.ArticleContent.trim()}</div>`;
         }
 
-        // --- 一般條文處理 ---
-        const rawLines = item.ArticleContent.split(/\r?\n/);
-        let itemCounter = 0;
-        
-        const formattedContent = rawLines.map(line => {
-            const trimmedLine = line.trim();
-            if (!trimmedLine) return ""; 
-
-            // 判斷是否為「款」(例如：一、二、三...)
-            const isSubItem = /^[一二三四五六七八九十]+、/.test(trimmedLine);
-            
-            if (!isSubItem) {
-                // 如果該行包含「第 X 條」或是該條文只有一行且跟條號一樣，不編號
-                if (trimmedLine.includes(item.ArticleNo)) return ""; 
-
-                itemCounter++;
-                const circleNum = getCircleNum(itemCounter);
-                return `<div class="law-item-row"><span class="item-num">${circleNum}</span>${trimmedLine}</div>`;
-            } else {
-                return `<div class="law-sub-row">${trimmedLine}</div>`;
+        // 處理條文項次
+        let itemIdx = 0;
+        const body = item.ArticleContent.split(/\n/).map(line => {
+            const txt = line.trim();
+            if (!txt || txt.includes(item.ArticleNo)) return "";
+            if (/^[一二三四五六七八九十]+、/.test(txt)) {
+                return `<div class="law-sub-row">${txt}</div>`;
             }
+            itemIdx++;
+            return `<div class="law-item-row"><span class="item-num">${getCircle(itemIdx)}</span>${txt}</div>`;
         }).join('');
 
-        return `
-            <div class="law-card-box">
-                <div class="law-no-header">${item.ArticleNo}</div>
-                <div class="law-body-content">${formattedContent}</div>
-            </div>
-        `;
+        return `<div class="law-card-box">
+                    <div class="law-no-header">${item.ArticleNo}</div>
+                    <div style="padding:10px 0;">${body}</div>
+                </div>`;
     }).join('');
+
+    container.innerHTML = headerHtml + listHtml;
 }
+
 
 // 輔助函數：轉換數字為圓圈數字 (支援到 20 項，道交條例夠用了)
 function getCircleNum(n) {
