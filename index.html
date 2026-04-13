@@ -163,20 +163,7 @@
             text-indent: -2em;
             margin-bottom: 4px;
         }
-                /* 法條卡片外框 */
-        .law-card-box {
-                // 修改這行，加入 onclick="openLawDetail(${index})"
-            return `<div class="law-card-box" onclick="openLawDetail(${index})">
-                    <div class="law-no-header">${item.ArticleNo}</div>
-                    <div style="padding:10px 0;">${bodyLines}</div>
-                    </div>`;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            margin-bottom: 15px;
-            overflow: hidden;
-            text-align: left;
-        }
+                
         
         /* 條號標題 (如：第 43 條) */
         .law-no-header {
@@ -497,30 +484,30 @@ async function showLawPage() {
 // 渲染法條
 function renderLaws(articles, headerHtml = "") {
     const container = document.getElementById('law-container');
-    const getCircle = (n) => ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"][n] || `${n}.`;
+    const getCircle = (n) => ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮"][n] || `${n}.`;
 
-    const listHtml = articles.map(item => {
-        // 判斷是否為「章標題」
+    const listHtml = articles.map((item, idx) => {
+        // 判斷章標題
         if (item.ArticleType === "C" || !item.ArticleNo) {
             return `<div class="law-chapter-header">${item.ArticleContent.trim()}</div>`;
         }
 
-        // 處理條文項次
+        // 處理內文
         let itemIdx = 0;
-        const body = item.ArticleContent.split(/\n/).map(line => {
+        const bodyLines = item.ArticleContent.split(/\n/).map(line => {
             const txt = line.trim();
-            if (!txt || txt.includes(item.ArticleNo)) return "";
-            if (/^[一二三四五六七八九十]+、/.test(txt)) {
-                return `<div class="law-sub-row">${txt}</div>`;
-            }
+            if (!txt || txt === item.ArticleNo || txt.replace(/\s+/g, '') === item.ArticleNo.replace(/\s+/g, '')) return "";
+            if (/^[一二三四五六七八九十]+、/.test(txt)) return `<div class="law-sub-row">${txt}</div>`;
             itemIdx++;
-            return `<div class="law-item-row"><span class="item-num">${getCircle(itemIdx)}</span>${txt}</div>`;
-        }).join('');
+            return `<div class="law-item-row"><span class="item-num">${getCircle(itemIdx)}</span><span class="item-text">${txt}</span></div>`;
+        }).filter(line => line !== "").join('');
 
-        return `<div class="law-card-box">
-                    <div class="law-no-header">${item.ArticleNo}</div>
-                    <div style="padding:10px 0;">${body}</div>
-                </div>`;
+        // 注意這裡：加入了 onclick="openLawDetail(${idx})"
+        return `
+            <div class="law-card-box" onclick="openLawDetail(${idx})">
+                <div class="law-no-header">${item.ArticleNo}</div>
+                <div style="padding: 10px 0;">${bodyLines}</div>
+            </div>`;
     }).join('');
 
     container.innerHTML = headerHtml + listHtml;
@@ -632,7 +619,7 @@ document.getElementById('law-detail-overlay').addEventListener('touchend', e => 
         </div>
     <div style="display:flex; justify-content: space-between; padding:15px; background:var(--card-bg); border-top:1px solid var(--border-color);">
         <button onclick="navLaw(-1)" style="width:45%; margin:0;">⬅ 上一條</button>
-        <button onclick="navLaw(1)" style="width:45%; margin:0;">下一條 ➡</button>
+        <button onclick="navLaw(1)" style="width:45%; margin:0;">下一條 ➡️</button>
     </div>
 </div>
 
