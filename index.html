@@ -117,23 +117,39 @@
         </div>
     </div>
 
-    <div id="skid" class="page">
-        <div class="card" style="border-top: 5px solid #34C759;">
+        <div id="skid" class="page">
+        <div class="card" style="border-top-color: #34C759;">
             <h2>🚗 車速換算 (煞車痕)</h2>
             <div class="input-group">
                 <label>路面摩擦係數參考 (f)</label>
-                <select id="f_skid_select">
-                    <option value="0.75" selected>瀝青乾燥 (1-3年) 0.75</option>
-                    <option value="0.70">瀝青乾燥 (3年以上) 0.70</option>
-                    <option value="0.65">瀝青潮濕 (1-3年) 0.65</option>
-                    <option value="0.68">砂石 0.68</option>
+                <select id="f_skid_select" style="background-color: var(--input-bg); color: var(--text-color);">
+                    <optgroup label="── 瀝青路面 ──">
+                        <option value="0.85">瀝青乾燥 (新築) 0.85</option>
+                        <option value="0.75" selected>瀝青乾燥 (1-3年) 0.75</option>
+                        <option value="0.70">瀝青乾燥 (3年以上) 0.70</option>
+                        <option value="0.80">瀝青潮濕 (新築) 0.80</option>
+                        <option value="0.65">瀝青潮濕 (1-3年) 0.65</option>
+                        <option value="0.60">瀝青潮濕 (3年以上) 0.60</option>
+                    </optgroup>
+                    <optgroup label="── 混凝土路面 ──">
+                        <option value="0.90">混凝土乾燥 (新築) 0.90</option>
+                        <option value="0.78">混凝土乾燥 (1-3年) 0.78</option>
+                        <option value="0.70">混凝土乾燥 (3年以上) 0.70</option>
+                        <option value="0.78">混凝土潮濕 (新築) 0.78</option>
+                        <option value="0.70">混凝土潮濕 (1-3年) 0.70</option>
+                        <option value="0.62">混凝土潮濕 (3年以上) 0.62</option>
+                    </optgroup>
+                    <optgroup label="── 其他 ──">
+                        <option value="0.68">砂石路面 0.68</option>
+                    </optgroup>
                 </select>
             </div>
-            <div class="input-group"><label>煞車痕長度 (m)</label><input type="number" id="d_skid"></div>
+            <div class="input-group"><label>煞車痕長度 (m)</label><input type="number" id="d_skid" inputmode="decimal"></div>
             <button onclick="calcSkid()" style="background:#34C759; color:white;">計算</button>
             <div class="result-box">估計時速：<span id="res_skid" class="val-text" style="color:#34C759">0</span> km/hr</div>
         </div>
     </div>
+
 
     <div id="overload" class="page">
         <div class="card" style="border-top: 5px solid #FF3B30;">
