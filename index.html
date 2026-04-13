@@ -59,6 +59,43 @@
         .res-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 16px; }
         .val-text { color: #ffab40; font-weight: bold; }
         #fine-detail { font-size: 14px; color: #a0a0a0; margin-top: 5px; border-top: 1px solid #444; padding-top: 5px; }
+        /* 法條容器優化 */
+        #law-container {
+            text-align: left;
+            line-height: 1.8;
+        }
+        
+        .law-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 10px;
+            background: var(--input-bg);
+            border-radius: 8px;
+        }
+        
+        .law-no-title {
+            color: var(--accent-color);
+            font-weight: bold;
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+        
+        .law-content {
+            font-size: 15px;
+            white-space: pre-wrap; /* 保持原始 JSON 中的換行 */
+            word-wrap: break-word;
+        }
+        
+        /* 針對「款」進行自動縮排 (如果是以一、二、三開頭) */
+        .law-content-line {
+            display: block;
+            padding-left: 2em;
+            text-indent: -2em;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body data-theme="dark">
@@ -305,22 +342,62 @@
        }
    }
 
-   function renderLaws(articles) {
-       const container = document.getElementById('law-container');
-       container.innerHTML = articles.map(item => `
-           <div style="padding:10px; border-bottom:1px solid var(--border-color); margin-bottom:5px;">
-               <b style="color:var(--accent-color);">${item.ArticleNo}</b><br>
-               <span style="font-size:14px;">${item.ArticleContent.replace(/\n/g, '<br>')}</span>
-           </div>
-       `).join('');
-   }
+       function renderLaws(articles) {
+        const container = document.getElementById('law-container');
+        if (!articles || articles.length === 0) {
+            container.innerHTML = "找不到相關條文";
+            return;
+        }
+    
+        container.innerHTML = articles.map(item => {
+            // 將內容依照換行符號切割成陣列
+            const lines = item.ArticleContent.split(/\r?\n/);
+            
+            // 處理每一行，讓「款」(一、二...) 自動有層次感
+            const formattedContent = lines.map(line => {
+                const trimmedLine = line.trim();
+                if (!trimmedLine) return ""; // 跳過空行
+                
+                // 如果是以「一、」「二、」等開頭，加入特定 class
+                const isSubItem = /^[一二三四五六七八九十]+、/.test(trimmedLine);
+                return `<span class="${isSubItem ? 'law-content-line' : ''}">${trimmedLine}</span>`;
+            }).join('');
+    
+            return `
+                <div class="law-item">
+                    <span class="law-no-title">${item.ArticleNo}</span>
+                    <div class="law-content">${formattedContent}</div>
+                </div>
+            `;
+        }).join('');
+    }
 
-   function filterLaws() {
-       const term = document.getElementById('law-search-box').value;
-       if (!window.allArticles) return;
-       const filtered = window.allArticles.filter(a => a.ArticleNo.includes(term) || a.ArticleContent.includes(term));
-       renderLaws(filtered);
-   }
+          function filterLaws() {
+            const term = document.getElementById('law-search-box').value.trim();
+            if (!window.allArticles) return;
+        
+            // 如果沒輸入就顯示全部
+            if (!term) {
+                renderLaws(window.allArticles);
+                return;
+            }
+        
+            const filtered = window.allArticles.filter(a => 
+                a.ArticleNo.includes(term) || a.ArticleContent.includes(term)
+            );
+        
+            // 渲染過濾後的結果
+            renderLaws(filtered);
+        
+            // [進階]：在結果中高亮關鍵字
+            if (term.length >= 1) {
+                const contentElems = document.querySelectorAll('.law-content, .law-no-title');
+                contentElems.forEach(el => {
+                    const regex = new RegExp(`(${term})`, 'gi');
+                    el.innerHTML = el.innerHTML.replace(regex, '<mark style="background:#ffab40; color:#000; border-radius:2px;">$1</mark>');
+                });
+            }
+        }
     
     updateDates();
 </script>
