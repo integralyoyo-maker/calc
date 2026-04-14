@@ -508,38 +508,38 @@ function navLaw(direction) {
 
 function updateDetailView() {
     const item = window.allArticles[currentLawIdx];
-    
-    // 安全檢查：如果找不到資料或點到章節標題，顯示預設提示而非空白
-    if (!item || item.ArticleType === "C") {
-        document.getElementById('detail-title').innerText = "提示";
-        document.getElementById('detail-content').innerHTML = "<div style='text-align:center; margin-top:50px;'>請選擇具體條文查看詳情</div>";
-        return;
-    }
+    if (!item || item.ArticleType === "C") return; // 安全檢查
 
     document.getElementById('detail-title').innerText = item.ArticleNo;
     
-    // ...以下維持你原本修正過後的「項、款、目」處理邏輯...
     let itemIdx = 0;
     const bodyLines = item.ArticleContent.split(/\n/).map(line => {
         const txt = line.trim();
-        if (!txt || txt === item.ArticleNo || txt.replace(/\s+/g, '') === item.ArticleNo.replace(/\s+/g, '')) return "";
-        if (txt.includes("第") && (txt.includes("章") || txt.includes("節"))) {
-            return `<div style="text-align:center; font-weight:bold; color:var(--accent-color); margin:15px 0;">${txt}</div>`;
+        if (!txt || txt === item.ArticleNo) return "";
+
+        // 【關鍵】判斷是否為「款」或「目」
+        const isSubItem = /^[一二三四五六七八九十]+、/.test(txt); // 如：一、
+        const isEyeItem = /^\([一二三四五六七八九十]+\)/.test(txt); // 如：(一)
+
+        // 如果是款或目，直接顯示並縮排，不給予左側圓圈編號
+        if (isSubItem || isEyeItem) {
+            const padding = isEyeItem ? "55px" : "35px";
+            return `<div style="padding-left: ${padding}; margin-bottom: 8px; width: 100%; box-sizing: border-box; line-height:1.6;">${txt}</div>`;
         }
-        const isSubItem = /^[一二三四五六七八九十]+、/.test(txt) || /^\([一二三四五六七八九十]+\)/.test(txt);
-        if (isSubItem) {
-            return `<div style="padding-left: 35px; opacity: 0.9; margin-bottom: 5px; font-size: 0.95em; line-height: 1.6;">${txt}</div>`;
-        }
+
+        // 真正的「項」：才累加圓圈數字
         itemIdx++;
-        const circles = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮"];
+        const circles = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
         const num = circles[itemIdx] || `${itemIdx}.`;
-        return `<div style="display:flex; margin-bottom:10px; line-height: 1.6;">
-                    <span style="color:var(--accent-color); font-weight:bold; margin-right:10px; flex-shrink:0; width: 25px;">${num}</span>
-                    <span>${txt}</span>
+        
+        // 使用 flex 確保編號與文字對齊，且 width: 100% 確保換行
+        return `<div style="display:flex; width:100%; margin-bottom:12px; line-height:1.6;">
+                    <span style="color:var(--accent-color); font-weight:bold; width:30px; flex-shrink:0;">${num}</span>
+                    <span style="flex:1;">${txt}</span>
                 </div>`;
     }).filter(l => l !== "").join('');
 
-    document.getElementById('detail-content').innerHTML = `<div style="line-height:1.8; font-size:1.05rem;">${bodyLines}</div>`;
+    document.getElementById('detail-content').innerHTML = bodyLines;
 }
 
 
