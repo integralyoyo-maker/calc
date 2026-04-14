@@ -5,57 +5,158 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>小港交通分隊勤務工具</title>
     <style>
-        :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #2d2d2d;
-            --text-color: #e0e0e0;
-            --accent-color: #8ab4f8;
-            --input-bg: #3d3d3d;
-            --border-color: #444444;
-            --highlight: #ffcc00;
-        }
+    /* 核心全局變數 */
+    :root {
+        --bg-color: #1a1a1a;
+        --card-bg: #2d2d2d;
+        --text-color: #e0e0e0;
+        --accent-color: #8ab4f8;
+        --input-bg: #3d3d3d;
+        --border-color: #444444;
+    }
 
-        [data-theme="light"] {
-            --bg-color: #f5f5f2;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --input-bg: #fafafa;
-            --border-color: #dddddd;
-        }
+    [data-theme="light"] {
+        --bg-color: #f5f5f2;
+        --card-bg: #ffffff;
+        --text-color: #333333;
+        --input-bg: #fafafa;
+        --border-color: #dddddd;
+    }
 
-        body { font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; transition: 0.3s; overflow-x: hidden; touch-action: pan-y; }
-        
-        .navbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: var(--card-bg); box-shadow: 0 2px 8px rgba(0,0,0,0.4); position: sticky; top: 0; z-index: 100; }
-        .menu-btn { font-size: 24px; cursor: pointer; color: var(--accent-color); padding: 5px; }
-        .theme-toggle { font-size: 20px; cursor: pointer; padding: 5px; }
+    /* 基礎排版設定 */
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        padding: 0;
+        transition: 0.3s;
+        overflow-x: hidden;
+    }
 
-        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--card-bg); box-shadow: 5px 0 15px rgba(0,0,0,0.5); transition: 0.3s; z-index: 1000; padding-top: 60px; }
-        .sidebar.active { left: 0; }
-        .sidebar-item { padding: 18px 25px; font-size: 16px; cursor: pointer; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; }
-        .sidebar-item:active { background: var(--input-bg); }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 999; }
-        .overlay.active { display: block; }
+    /* 導航欄與選單 */
+    .navbar {
+        height: 60px;
+        background: var(--card-bg);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
 
-        .page { display: none; padding: 20px; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; }
-        .page.active { display: flex; }
-        .card { background: var(--card-bg); padding: 22px; border-radius: 16px; width: 100%; max-width: 400px; margin-bottom: 20px; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        
-        /* 法條專用樣式 */
-        .law-card { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--highlight); width: 100%; max-width: 600px; box-sizing: border-box; }
-        .law-no { color: var(--highlight); font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; }
-        .law-text { line-height: 1.6; letter-spacing: 0.5px; }
-        #law-search-box { width: 100%; max-width: 400px; margin-bottom: 20px; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); outline: none; }
-        .hidden { display: none; }
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        width: 280px;
+        height: 100%;
+        background: var(--card-bg);
+        z-index: 2001;
+        transition: 0.3s;
+        padding-top: 60px;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+    }
 
-        h2 { margin-top: 0; font-size: 18px; color: var(--accent-color); border-left: 5px solid var(--accent-color); padding-left: 12px; margin-bottom: 20px; }
-        .input-group { margin-bottom: 18px; }
-        label { display: block; margin-bottom: 6px; font-size: 14px; opacity: 0.8; }
-        input, select { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 16px; background: var(--input-bg); color: var(--text-color); box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 15px; background-color: var(--accent-color); color: #000; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; margin-top: 5px; cursor: pointer; }
-        .result-box { margin-top: 15px; padding: 15px; background: var(--input-bg); border-radius: 10px; border: 1px dashed var(--border-color); width: 100%; box-sizing: border-box; }
-        .res-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 16px; }
-        .val-text { color: #ffab40; font-weight: bold; }
-    </style>
+    .sidebar.active { left: 0; }
+
+    .sidebar-item {
+        padding: 15px 25px;
+        font-size: 1.1rem;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        z-index: 2000;
+    }
+    .overlay.active { display: block; }
+
+    /* 頁面與卡片 */
+    .page { display: none; padding: 20px; flex-direction: column; align-items: center; }
+    .page.active { display: flex; }
+
+    .card {
+        background: var(--card-bg);
+        padding: 22px;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 450px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        border-top: 4px solid var(--accent-color);
+    }
+
+    h2 { margin-top: 0; font-size: 1.2rem; color: var(--accent-color); }
+
+    /* 輸入框與按鈕 */
+    .input-group { margin-bottom: 15px; text-align: left; }
+    label { display: block; margin-bottom: 8px; font-size: 0.9rem; opacity: 0.8; }
+    input, select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+
+    button {
+        width: 100%;
+        padding: 14px;
+        border-radius: 10px;
+        border: none;
+        background: var(--accent-color);
+        color: #000;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    /* 結果顯示盒 */
+    .result-box {
+        background: rgba(0,0,0,0.2);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+        text-align: left;
+    }
+    .res-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .val-text { font-weight: bold; color: var(--accent-color); }
+
+    /* 法條查詢專用樣式 */
+    .law-card-box {
+        background: var(--input-bg);
+        border-radius: 10px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        overflow: hidden;
+    }
+    .law-no-header {
+        background: rgba(255,255,255,0.05);
+        padding: 10px 15px;
+        font-weight: bold;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .law-item-row { display: flex; padding: 5px 15px; font-size: 0.95rem; }
+    .item-num { color: var(--accent-color); margin-right: 8px; font-weight: bold; }
+    .law-sub-row { padding-left: 35px; opacity: 0.8; font-size: 0.9rem; margin-bottom: 5px; }
+    .law-chapter-header {
+        text-align: center; font-weight: bold; margin: 25px 0 10px; 
+        color: var(--accent-color); border-bottom: 1px solid var(--border-color);
+    }
+</style>
+
 </head>
 <body data-theme="dark">
 
@@ -70,7 +171,7 @@
         <div class="sidebar-item" onclick="showPage('fps')">⏱️ 時速換算 (FPS)</div>
         <div class="sidebar-item" onclick="showPage('skid')">🚗 車速換算 (煞車痕)</div>
         <div class="sidebar-item" onclick="showPage('overload')">🚚 超載計算器</div>
-        <div class="sidebar-item" onclick="showLawPage()">⚖️ 處罰條例 (即時更新)</div>
+        <div class="sidebar-item" onclick="showLawPage()">⚖️ 處罰條例查詢</div>
     </div>
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
@@ -98,14 +199,6 @@
         </div>
     </div>
 
-    <div id="law-page" class="page">
-        <h2>⚖️ 道路交通管理處罰條例</h2>
-        <input type="text" id="law-search-box" placeholder="搜尋條號 (例如: 43)..." onkeyup="filterLaws()">
-        <div id="law-container" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <div class="loading">正在連線至全國法規資料庫...</div>
-        </div>
-    </div>
-
     <div id="fps" class="page">
         <div class="card">
             <h2>⏱️ 時速換算 (FPS)</h2>
@@ -117,13 +210,13 @@
         </div>
     </div>
 
-        <div id="skid" class="page">
+    <div id="skid" class="page">
         <div class="card" style="border-top-color: #34C759;">
             <h2>🚗 車速換算 (煞車痕)</h2>
             <div class="input-group">
                 <label>路面摩擦係數參考 (f)</label>
-                <select id="f_skid_select" style="background-color: var(--input-bg); color: var(--text-color);">
-                    <optgroup label="── 瀝青路面 ──">
+                <select id="f_skid_select">
+                    <optgroup label="瀝青路面">
                         <option value="0.85">瀝青乾燥 (新築) 0.85</option>
                         <option value="0.75" selected>瀝青乾燥 (1-3年) 0.75</option>
                         <option value="0.70">瀝青乾燥 (3年以上) 0.70</option>
@@ -131,7 +224,7 @@
                         <option value="0.65">瀝青潮濕 (1-3年) 0.65</option>
                         <option value="0.60">瀝青潮濕 (3年以上) 0.60</option>
                     </optgroup>
-                    <optgroup label="── 混凝土路面 ──">
+                    <optgroup label="混凝土路面">
                         <option value="0.90">混凝土乾燥 (新築) 0.90</option>
                         <option value="0.78">混凝土乾燥 (1-3年) 0.78</option>
                         <option value="0.70">混凝土乾燥 (3年以上) 0.70</option>
@@ -139,7 +232,7 @@
                         <option value="0.70">混凝土潮濕 (1-3年) 0.70</option>
                         <option value="0.62">混凝土潮濕 (3年以上) 0.62</option>
                     </optgroup>
-                    <optgroup label="── 其他 ──">
+                    <optgroup label="其他">
                         <option value="0.68">砂石路面 0.68</option>
                     </optgroup>
                 </select>
@@ -150,85 +243,74 @@
         </div>
     </div>
 
-
     <div id="overload" class="page">
-        <div class="card" style="border-top: 5px solid #FF3B30;">
+        <div class="card" style="border-top-color: #FF3B30;">
             <h2>🚚 超載計算器</h2>
-            <div class="input-group"><label>實際總重 (公噸)</label><input type="number" id="w_act"></div>
-            <div class="input-group"><label>核定總重 (公噸)</label><input type="number" id="w_lim"></div>
+            <div class="input-group"><label>實際總重 (公噸)</label><input type="number" id="w_act" inputmode="decimal"></div>
+            <div class="input-group"><label>核定總重 (公噸)</label><input type="number" id="w_lim" inputmode="decimal"></div>
             <button onclick="calcOver()" style="background:#FF3B30; color:white;">判定</button>
             <div id="res_over" class="result-box" style="display:none;">
                 <div class="res-row"><span>狀態：</span><span id="o_status" class="val-text"></span></div>
+                <div class="res-row" id="fine-row" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px; display: none;">
+                    <span>應處罰鍰：</span><span id="o_fine" class="val-text" style="color: #ff5252; font-size: 18px;">-</span>
+                </div>
+                <div id="fine-detail" style="display: none;"></div>
                 <div id="o_law" style="font-size:14px; margin-top:10px; color:#ffab40; line-height:1.6; border-top: 1px solid #444; padding-top: 10px;"></div>
             </div>
         </div>
     </div>
 
+    <div id="law-page" class="page">
+    <div class="card" style="max-width: 600px;">
+        <h2>⚖️ 處罰條例查詢</h2>
+        <input type="text" id="law-search-box" placeholder="輸入條號 (如: 43)..." onkeyup="filterLaws()" style="margin-bottom: 15px;">
+        <div id="law-container" style="max-height: 60vh; overflow-y: auto;">
+            <div class="loading">請點選側邊欄載入法條...</div>
+        </div>
+    </div>
+</div>
 <script>
-    let allArticles = [];
+    // 側邊選單手勢
+    let touchStartX = 0;
+    let touchEndX = 0;
+    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
+    document.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        const threshold = 100;
+        if (touchEndX - touchStartX > threshold) toggleMenu(true);
+        if (touchStartX - touchEndX > threshold) toggleMenu(false);
+    }, false);
 
-    // --- 介面邏輯 ---
-    function toggleMenu() {
-        document.getElementById('sidebar').classList.toggle('active');
-        document.getElementById('overlay').classList.toggle('active');
+    function toggleMenu(forceState) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const isActive = (typeof forceState === 'boolean') ? forceState : !sidebar.classList.contains('active');
+        sidebar.classList.toggle('active', isActive);
+        overlay.classList.toggle('active', isActive);
     }
 
     function showPage(pId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(pId).classList.add('active');
-        toggleMenu();
-        window.scrollTo(0,0);
+        toggleMenu(false);
     }
 
     function toggleTheme() {
-        const b = document.body;
-        const current = b.getAttribute('data-theme');
-        b.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
-        document.getElementById('theme-icon').innerText = current === 'light' ? '☀️' : '🌙';
-    }
-
-    // --- 法條同步邏輯 ---
-    async function showLawPage() {
-        showPage('law-page');
-        if (allArticles.length > 0) return; // 避免重複抓取
-
-        const container = document.getElementById('law-container');
-        try {
-            const response = await fetch('https://law.moj.gov.tw/api/Law/GetLawAll?PCode=K0040012');
-            const data = await response.json();
-            allArticles = data.LawArticles;
-            renderLaws(allArticles);
-        } catch (error) {
-            container.innerHTML = '<div style="color:red; padding:20px;">無法連線至 API。可能是公司網路封鎖。</div>';
+        const b = document.body; const icon = document.getElementById('theme-icon');
+        if(b.getAttribute('data-theme')==='light'){
+            b.setAttribute('data-theme','dark'); icon.innerText='☀️';
+        } else {
+            b.setAttribute('data-theme','light'); icon.innerText='🌙';
         }
     }
 
-    function renderLaws(articles) {
-        const container = document.getElementById('law-container');
-        container.innerHTML = articles.map(item => `
-            <div class="law-card" data-no="${item.ArticleNo}">
-                <div class="law-no">${item.ArticleNo}</div>
-                <div class="law-text">${item.ArticleContent.replace(/\n/g, '<br>')}</div>
-            </div>
-        `).join('');
-    }
-
-    function filterLaws() {
-        const input = document.getElementById('law-search-box').value.toLowerCase();
-        const cards = document.getElementsByClassName('law-card');
-        for (let card of cards) {
-            const no = card.getAttribute('data-no').toLowerCase();
-            card.classList.toggle('hidden', !no.includes(input));
-        }
-    }
-
-    // --- 原始工具邏輯 (日期、計算) ---
+    // 計算邏輯：完全在地執行，不依賴 API
     function getBaseDate(str) {
         if(!str || str.length < 6) return new Date();
-        const yLen = str.length - 4;
-        const y = parseInt(str.substring(0, yLen)) + 1911;
-        const m = parseInt(str.substring(yLen, yLen + 2)) - 1;
-        const d = parseInt(str.substring(yLen + 2));
+        const yearLen = str.length - 4;
+        const y = parseInt(str.substring(0, yearLen)) + 1911;
+        const m = parseInt(str.substring(yearLen, yearLen + 2)) - 1;
+        const d = parseInt(str.substring(yearLen + 2));
         return new Date(y, m, d);
     }
 
@@ -249,7 +331,8 @@
         if(val.length < 6) return;
         const birth = getBaseDate(val); const now = new Date();
         let age = now.getFullYear() - birth.getFullYear();
-        if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age--;
+        const mDiff = now.getMonth() - birth.getMonth();
+        if (mDiff < 0 || (mDiff === 0 && now.getDate() < birth.getDate())) age--;
         document.getElementById('age-result').innerText = age > 0 ? age : 0;
     }
 
@@ -269,15 +352,241 @@
     function calcOver() {
         const a=parseFloat(document.getElementById('w_act').value);
         const l=parseFloat(document.getElementById('w_lim').value);
+        const resOver = document.getElementById('res_over');
+        const oStatus = document.getElementById('o_status');
+        const oFineRow = document.getElementById('fine-row');
+        const oFine = document.getElementById('o_fine');
+        const oFineDetail = document.getElementById('fine-detail');
+        const oLaw = document.getElementById('o_law');
+
         if(!a||!l) return;
         const diff = a-l; const per = (diff/l)*100;
-        document.getElementById('res_over').style.display="block";
-        document.getElementById('o_status').innerText = diff > 0 ? `超載 ${diff.toFixed(3)} 噸 (${per.toFixed(2)}%)` : "未超載";
-        let msg = per > 20 ? "🔴 應責令當場卸貨分裝。" : per > 10 ? "🟡 應當場卸貨分裝或二小時內改正。" : "🟢 未逾 10%，以不舉發為適當。";
-        document.getElementById('o_law').innerHTML = msg;
-    }
+        resOver.style.display="block";
+        oStatus.innerText = diff > 0 ? `超載 ${diff.toFixed(3)} 噸 (${per.toFixed(2)}%)` : "未超載";
 
-    window.onload = updateDates;
+        if(diff <= 0) { oFineRow.style.display = "none"; oFineDetail.style.display = "none"; oLaw.style.display = "none"; return; }
+
+        oFineRow.style.display = "flex"; oFineDetail.style.display = "block"; oLaw.style.display = "block";
+        const chargedTons = Math.ceil(diff);
+        let extra = 0;
+        if (chargedTons > 30) extra = 5000;
+        else if (chargedTons > 20) extra = 3000;
+        else if (chargedTons > 10) extra = 2000;
+        else extra = 1000;
+
+        let fine = 10000 + (chargedTons * extra);
+        oFine.innerText = `新臺幣 ${fine.toLocaleString()} 元`;
+        oFineDetail.innerText = `明細：基本 \$10,000 + (加罰計 ${chargedTons} 噸 × \$${extra.toLocaleString()})`;
+
+        let msg = "";
+        if(per > 20) msg = "🔴 <b>超載逾 20%：</b><br>應責令當場卸貨分裝，當場禁止其通行。";
+        else if(per > 10) msg = "🟡 <b>超載 10% - 20%：</b><br>應當場卸貨分裝，或責令其於二小時內改正，逾二小時不改正者，得連續舉發。";
+        else msg = "🟢 <b>超載未逾 10%：</b><br>未嚴重危害交通安全、秩序，且情節輕微，以不舉發為適當。行為人發生交通事故，仍得舉發。";
+        oLaw.innerHTML = msg;
+    }
+// 顯示法條頁面並讀取資料
+async function showLawPage() {
+    showPage('law-page');
+    const container = document.getElementById('law-container');
+    if (window.allArticles && window.allArticles.length > 0) return;
+
+    try {
+        const response = await fetch('./traffic_law.json');
+        const data = await response.json();
+        window.allArticles = data.LawArticles;
+
+        // 建立頂部資訊 HTML
+        const headerHtml = `
+            <div class="law-info-header">
+                <div style="font-weight:bold; color:var(--accent-color);">${data.LawName}</div>
+                <div class="law-date-row">
+                    <span>📅 修正：${data.LawModifiedDate || '2026/01/14'}</span>
+                    <span>🚀 施行：${data.LawEffectiveDate || '2026/03/13'}</span>
+                </div>
+            </div>`;
+
+        renderLaws(window.allArticles, headerHtml);
+    } catch (e) {
+        container.innerHTML = "讀取 traffic_law.json 失敗";
+    }
+}
+
+function renderLaws(articles, headerHtml = "") {
+    const container = document.getElementById('law-container');
+    const getCircle = (n) => ["", "１", "２", "３", "４", "５", "６", "７", "８", "９", "１０", "１１", "１２", "１３", "１４", "１５"][n] || `${n}.`;
+
+    const listHtml = articles.map((item) => {
+        // 重要：在原始總表中找出這條法條的真正位置
+        const originalIdx = window.allArticles.indexOf(item);
+
+        if (item.ArticleType === "C" || !item.ArticleNo) {
+            return `<div class="law-chapter-header">${item.ArticleContent.trim()}</div>`;
+        }
+
+        let itemIdx = 0;
+        const bodyLines = item.ArticleContent.split(/\n/).map(line => {
+            const txt = line.trim();
+            if (!txt || txt === item.ArticleNo || txt.replace(/\s+/g, '') === item.ArticleNo.replace(/\s+/g, '')) return "";
+            if (/^[一二三四五六七八九十]+、/.test(txt)) return `<div class="law-sub-row">${txt}</div>`;
+            itemIdx++;
+            return `<div class="law-item-row"><span class="item-num">${getCircle(itemIdx)}</span><span class="item-text">${txt}</span></div>`;
+        }).filter(line => line !== "").join('');
+
+        // 這裡改用 originalIdx
+        return `
+            <div class="law-card-box" onclick="openLawDetail(${originalIdx})">
+                <div class="law-no-header">${item.ArticleNo}</div>
+                <div style="padding: 10px 0;">${bodyLines}</div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = headerHtml + listHtml;
+}
+
+
+// 輔助函數：轉換數字為圓圈數字 (支援到 20 項，道交條例夠用了)
+function getCircleNum(n) {
+    const circles = ["",  "１", "２", "３", "４", "５", "６", "７", "８", "９", "１０", "１１", "１２", "１３", "１４", "１５"];
+    return circles[n] || `${n}.`;
+}
+          function filterLaws() {
+            const term = document.getElementById('law-search-box').value.trim();
+            if (!window.allArticles) return;
+
+            // 如果沒輸入就顯示全部
+            if (!term) {
+                renderLaws(window.allArticles);
+                return;
+            }
+
+            const filtered = window.allArticles.filter(a => 
+                a.ArticleNo.includes(term) || a.ArticleContent.includes(term)
+            );
+
+            // 渲染過濾後的結果
+            renderLaws(filtered);
+
+            // [進階]：在結果中高亮關鍵字
+            if (term.length >= 1) {
+                const contentElems = document.querySelectorAll('.law-content, .law-no-title');
+                contentElems.forEach(el => {
+                    const regex = new RegExp(`(${term})`, 'gi');
+                    el.innerHTML = el.innerHTML.replace(regex, '<mark style="background:#ffab40; color:#000; border-radius:2px;">$1</mark>');
+                });
+            }
+        }
+
+    updateDates();
+    let currentLawIdx = 0;
+
+// 開啟詳情
+function openLawDetail(index) {
+    currentLawIdx = index;
+    updateDetailView();
+    document.getElementById('law-detail-overlay').style.display = 'flex';
+}
+
+// 關閉詳情
+function closeLawDetail() {
+    document.getElementById('law-detail-overlay').style.display = 'none';
+}
+
+// 切換前後條
+function navLaw(direction) {
+    const nextIdx = currentLawIdx + direction;
+    // 檢查邊界且跳過「章標題」
+    if (nextIdx >= 0 && nextIdx < window.allArticles.length) {
+        currentLawIdx = nextIdx;
+        // 如果是標題，就再跳一格
+        if (window.allArticles[currentLawIdx].ArticleType === "C") {
+            navLaw(direction); 
+            return;
+        }
+        updateDetailView();
+    }
+}
+
+function updateDetailView() {
+    const item = window.allArticles[currentLawIdx];
+    if (!item || item.ArticleType === "C") return; // 安全檢查
+    if (!item || item.ArticleType === "C") return;
+
+    document.getElementById('detail-title').innerText = item.ArticleNo;
+
+    let itemIdx = 0;
+    const bodyLines = item.ArticleContent.split(/\n/).map(line => {
+        const txt = line.trim();
+        if (!txt || txt === item.ArticleNo) return "";
+        // 排除空白與重複條號
+        if (!txt || txt === item.ArticleNo || txt.replace(/\s+/g, '') === item.ArticleNo.replace(/\s+/g, '')) return "";
+
+        // 【關鍵】判斷是否為「款」或「目」
+        const isSubItem = /^[一二三四五六七八九十]+、/.test(txt); // 如：一、
+        const isEyeItem = /^\([一二三四五六七八九十]+\)/.test(txt); // 如：(一)
+        // 【精準判斷層級】
+        const isSubItem = /^[一二三四五六七八九十]+、/.test(txt); // 款：一、
+        const isEyeItem = /^\([一二三四五六七八九十]+\)/.test(txt); // 目：(一)
+
+        // 如果是款或目，直接顯示並縮排，不給予左側圓圈編號
+        // 如果是款或目，不增加 itemIdx，直接給予縮排
+        if (isSubItem || isEyeItem) {
+            const padding = isEyeItem ? "55px" : "35px";
+            return `<div style="padding-left: ${padding}; margin-bottom: 8px; width: 100%; box-sizing: border-box; line-height:1.6;">${txt}</div>`;
+            const padding = isEyeItem ? "82px" : "32px"; // 目縮排更多
+            return `<div style="padding-left: ${padding}; margin-bottom: 8px; width: 100%; box-sizing: border-box; line-height: 1.6; color: rgba(255,255,255,0.9); font-size: 0.95em;">${txt}</div>`;
+        }
+
+        // 真正的「項」：才累加圓圈數字
+        // 真正的「項」：增加數字編號
+        itemIdx++;
+        const circles = ["",  "１", "２", "３", "４", "５", "６", "７", "８", "９", "１０", "１１", "１２", "１３", "１４", "１５"];
+        const num = circles[itemIdx] || `${itemIdx}.`;
+        
+        // 使用 flex 確保編號與文字對齊，且 width: 100% 確保換行
+        return `<div style="display:flex; width:100%; margin-bottom:12px; line-height:1.6;">
+                    <span style="color:var(--accent-color); font-weight:bold; width:30px; flex-shrink:0;">${num}</span>
+                    <span style="flex:1;">${txt}</span>
+        // 修正編號樣式：使用固定寬度 span 確保 10, 11 不會跑掉
+        return `<div style="display: flex; width: 100%; margin-bottom: 12px; line-height: 1.6;">
+                    <span style="color: #60a5fa; font-weight: bold; width: 32px; flex-shrink: 0; display: inline-block; text-align: left;">${itemIdx}</span>
+                    <span style="flex: 1; word-break: break-all;">${txt}</span>
+                </div>`;
+    }).filter(l => l !== "").join('');
+
+    document.getElementById('detail-content').innerHTML = bodyLines;
+}
+
+
 </script>
+
+<div id="law-detail-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); z-index:2000; display:none; flex-direction:column;">
+    <div class="navbar" style="display:flex; align-items:center; justify-content:space-between; padding:10px 15px; background:var(--card-bg);">
+        <div class="back-btn" onclick="closeLawDetail()" style="font-size:26px; font-weight:bold; cursor:pointer; color:var(--accent-color); padding:0 15px;">&lt;</div> 
+        <div id="detail-title" style="background:var(--input-bg); color:var(--accent-color); padding:6px 35px; border-radius:30px; border:1px solid var(--border-color); font-weight:bold; font-size:0.95rem;">第 0 條</div>
+        <div style="width:45px;"></div> 
+    </div>
+<div id="law-detail-header" style="display: flex; align-items: center; padding: 10px;">
+    
+    <button onclick="closeLawDetail()" style="background:none; border:none; color: #60a5fa; cursor:pointer; padding: 5px; display: flex; align-items: center; -webkit-tap-highlight-color: transparent;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span style="font-size: 17px; margin-left: -5px;">返回</span> </button>
+
+    <div id="detail-title" style="flex: 1; text-align: center; font-weight: bold;">第 69 條</div>
+    
+    <div style="width: 60px;"></div> 
+</div>
+
+    <div id="detail-content" style="flex:1; overflow-y:auto; padding:20px;"></div>
+
+    <div style="display:flex; justify-content:space-between; padding:15px; background:var(--card-bg); border-top:1px solid var(--border-color);">
+        <button onclick="navLaw(-1)" style="width:45%; border-radius:12px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color);">⬅ 上一條</button>
+        <button onclick="navLaw(1)" style="width:45%; border-radius:12px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color);">下一條 ➡️</button>
+    </div>
+</div>
+
+
+
 </body>
 </html>
