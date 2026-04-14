@@ -411,18 +411,18 @@ async function showLawPage() {
     }
 }
 
-// 渲染法條
 function renderLaws(articles, headerHtml = "") {
     const container = document.getElementById('law-container');
     const getCircle = (n) => ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮"][n] || `${n}.`;
 
-    const listHtml = articles.map((item, idx) => {
-        // 判斷章標題
+    const listHtml = articles.map((item) => {
+        // 重要：在原始總表中找出這條法條的真正位置
+        const originalIdx = window.allArticles.indexOf(item);
+
         if (item.ArticleType === "C" || !item.ArticleNo) {
             return `<div class="law-chapter-header">${item.ArticleContent.trim()}</div>`;
         }
 
-        // 處理內文
         let itemIdx = 0;
         const bodyLines = item.ArticleContent.split(/\n/).map(line => {
             const txt = line.trim();
@@ -432,9 +432,9 @@ function renderLaws(articles, headerHtml = "") {
             return `<div class="law-item-row"><span class="item-num">${getCircle(itemIdx)}</span><span class="item-text">${txt}</span></div>`;
         }).filter(line => line !== "").join('');
 
-        // 注意這裡：加入了 onclick="openLawDetail(${idx})"
+        // 這裡改用 originalIdx
         return `
-            <div class="law-card-box" onclick="openLawDetail(${idx})">
+            <div class="law-card-box" onclick="openLawDetail(${originalIdx})">
                 <div class="law-no-header">${item.ArticleNo}</div>
                 <div style="padding: 10px 0;">${bodyLines}</div>
             </div>`;
@@ -506,36 +506,35 @@ function navLaw(direction) {
     }
 }
 
-// 更新詳細畫面內容
 function updateDetailView() {
     const item = window.allArticles[currentLawIdx];
-    // 更新橢圓標頭文字
+    
+    // 安全檢查：如果找不到資料或點到章節標題，顯示預設提示而非空白
+    if (!item || item.ArticleType === "C") {
+        document.getElementById('detail-title').innerText = "提示";
+        document.getElementById('detail-content').innerHTML = "<div style='text-align:center; margin-top:50px;'>請選擇具體條文查看詳情</div>";
+        return;
+    }
+
     document.getElementById('detail-title').innerText = item.ArticleNo;
     
+    // ...以下維持你原本修正過後的「項、款、目」處理邏輯...
     let itemIdx = 0;
     const bodyLines = item.ArticleContent.split(/\n/).map(line => {
         const txt = line.trim();
-        
-        // 1. 過濾掉重複的條號
         if (!txt || txt === item.ArticleNo || txt.replace(/\s+/g, '') === item.ArticleNo.replace(/\s+/g, '')) return "";
-
-        // 2. 判斷是否為「款」(一、二、三...)，不計入圓圈數字，且縮排
-        if (/^[一二三四五六七八九十]+、/.test(txt)) {
-            return `<div style="padding-left: 30px; opacity: 0.9; margin-bottom: 5px; font-size: 0.95em;">${txt}</div>`;
-        }
-
-        // 3. 判斷是否為「章/節/目」標題，置中不給圓圈
         if (txt.includes("第") && (txt.includes("章") || txt.includes("節"))) {
             return `<div style="text-align:center; font-weight:bold; color:var(--accent-color); margin:15px 0;">${txt}</div>`;
         }
-
-        // 4. 真正的「項」：才計算圓圈編號
+        const isSubItem = /^[一二三四五六七八九十]+、/.test(txt) || /^\([一二三四五六七八九十]+\)/.test(txt);
+        if (isSubItem) {
+            return `<div style="padding-left: 35px; opacity: 0.9; margin-bottom: 5px; font-size: 0.95em; line-height: 1.6;">${txt}</div>`;
+        }
         itemIdx++;
         const circles = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮"];
         const num = circles[itemIdx] || `${itemIdx}.`;
-        
-        return `<div style="display:flex; margin-bottom:10px;">
-                    <span style="color:var(--accent-color); font-weight:bold; margin-right:10px; flex-shrink:0;">${num}</span>
+        return `<div style="display:flex; margin-bottom:10px; line-height: 1.6;">
+                    <span style="color:var(--accent-color); font-weight:bold; margin-right:10px; flex-shrink:0; width: 25px;">${num}</span>
                     <span>${txt}</span>
                 </div>`;
     }).filter(l => l !== "").join('');
