@@ -519,8 +519,8 @@ function updateDetailView() {
         if (!txt || txt === item.ArticleNo || txt.replace(/\s+/g, '') === item.ArticleNo.replace(/\s+/g, '')) return "";
 
         // 【精準判斷層級】
-        const isSubItem = /^[一二三四五六七八九十]+、/.test(txt); // 款：一、
-        const isEyeItem = /^\([一二三四五六七八九十]+\)/.test(txt); // 目：(一)
+        const isSubItem = /^[一二三四五六七八九十]+、/.test(txt); // 抓：一、
+        const isEyeItem = /^\([一二三四五六七八九十]+\)/.test(txt); // 抓：(一)
 
         // 如果是款或目，不增加 itemIdx，直接給予縮排
         if (isSubItem || isEyeItem) {
@@ -541,29 +541,28 @@ function updateDetailView() {
 }
 
 </script>
+    
+<div id="law-detail-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); display:none; flex-direction:column; z-index:3000;">
+    
+    <div id="law-detail-header" style="display: flex; align-items: center; padding: 10px; background:var(--card-bg); border-bottom:1px solid var(--border-color);">
+        <button onclick="closeLawDetail()" style="background:none; border:none; color: #60a5fa; cursor:pointer; padding: 5px; display: flex; align-items: center; -webkit-tap-highlight-color: transparent;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span style="font-size: 17px; margin-left: -5px; font-weight: 500;">返回</span>
+        </button>
 
-<div id="law-detail-header" style="display: flex; align-items: center; padding: 10px;">
+        <div id="detail-title" style="flex: 1; text-align: center; font-weight: bold; font-size: 1.1rem; color:var(--text-color);">第 -- 條</div>
+        
+        <div style="width: 80px;"></div> 
+    </div>
     
-    <button onclick="closeLawDetail()" style="background:none; border:none; color: #60a5fa; cursor:pointer; padding: 5px; display: flex; align-items: center; -webkit-tap-highlight-color: transparent;">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-        <span style="font-size: 17px; margin-left: -5px;">返回</span> </button>
-
-    <div id="detail-title" style="flex: 1; text-align: center; font-weight: bold;">第 69 條</div>
+    <div id="detail-content" style="flex:1; overflow-y:auto; padding:20px; display: flex; flex-direction: column;"></div>
     
-    <div style="width: 60px;"></div> 
-</div>
-    
-    <div id="detail-content" style="flex:1; overflow-y:auto; padding:20px;"></div>
-    
-    <div style="display:flex; justify-content:space-between; padding:15px; background:var(--card-bg); border-top:1px solid var(--border-color);">
-        <button onclick="navLaw(-1)" style="width:45%; border-radius:12px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color);">⬅ 上一條</button>
-        <button onclick="navLaw(1)" style="width:45%; border-radius:12px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color);">下一條 ➡️</button>
+    <div style="display:flex; justify-content:space-between; padding:15px 20px 30px; background:var(--card-bg); border-top:1px solid var(--border-color);">
+        <button onclick="navLaw(-1)" style="width:45%; border-radius:12px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color); margin:0;">⬅ 上一條</button>
+        <button onclick="navLaw(1)" style="width:45%; border-radius:12px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color); margin:0;">下一條 ➡️</button>
     </div>
 </div>
-
-
-
 </body>
 </html>
