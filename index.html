@@ -400,7 +400,7 @@ async function showLawPage() {
             <div class="law-info-header">
                 <div style="font-weight:bold; color:var(--accent-color);">${data.LawName}</div>
                 <div class="law-date-row">
-                    <span>📅 修正：${data.LawModifiedDate || '2026/03/13'}</span>
+                    <span>📅 修正：${data.LawModifiedDate || '2026/01/14'}</span>
                     <span>🚀 施行：${data.LawEffectiveDate || '2026/03/13'}</span>
                 </div>
             </div>`;
@@ -413,7 +413,7 @@ async function showLawPage() {
 
 function renderLaws(articles, headerHtml = "") {
     const container = document.getElementById('law-container');
-    const getCircle = (n) => ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮"][n] || `${n}.`;
+    const getCircle = (n) => ["", "１", "𝟮", "3️⃣", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮"][n] || `${n}.`;
 
     const listHtml = articles.map((item) => {
         // 重要：在原始總表中找出這條法條的真正位置
