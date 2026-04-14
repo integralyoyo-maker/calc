@@ -413,7 +413,7 @@ async function showLawPage() {
 
 function renderLaws(articles, headerHtml = "") {
     const container = document.getElementById('law-container');
-    const getCircle = (n) => ["", "１", "𝟮", "3️⃣", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮"][n] || `${n}.`;
+    const getCircle = (n) => ["", "１", "２", "３", "４", "５", "６", "７", "８", "９", "１０", "１１", "１２", "１３", "１４", "１５"][n] || `${n}.`;
 
     const listHtml = articles.map((item) => {
         // 重要：在原始總表中找出這條法條的真正位置
@@ -446,7 +446,7 @@ function renderLaws(articles, headerHtml = "") {
 
 // 輔助函數：轉換數字為圓圈數字 (支援到 20 項，道交條例夠用了)
 function getCircleNum(n) {
-    const circles = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", "⑬", "⑭", "⑮", "⑯", "⑰", "⑱", "⑲", "⑳"];
+    const circles = ["",  "１", "２", "３", "４", "５", "６", "７", "８", "９", "１０", "１１", "１２", "１３", "１４", "１５"];
     return circles[n] || `${n}.`;
 }
           function filterLaws() {
@@ -529,7 +529,7 @@ function updateDetailView() {
 
         // 真正的「項」：才累加圓圈數字
         itemIdx++;
-        const circles = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"];
+        const circles = ["",  "１", "２", "３", "４", "５", "６", "７", "８", "９", "１０", "１１", "１２", "１３", "１４", "１５"];
         const num = circles[itemIdx] || `${itemIdx}.`;
         
         // 使用 flex 確保編號與文字對齊，且 width: 100% 確保換行
