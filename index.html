@@ -303,17 +303,44 @@
     </div>
 </div>
 <script>
-    // 側邊選單手勢
-    let touchStartX = 0;
-    let touchEndX = 0;
-    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
-    document.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        const threshold = 100;
-        if (touchEndX - touchStartX > threshold) toggleMenu(true);
-        if (touchStartX - touchEndX > threshold) toggleMenu(false);
+       // 在原有的觸控監聽中加入判斷
+    document.addEventListener('touchstart', function(e) {
+        // 如果詳情視窗是打開的，就「不」執行開啟選單的邏輯
+        const overlay = document.getElementById('law-detail-overlay');
+        if (overlay.style.display === 'flex') {
+            // 這裡可以只處理詳情頁的左右翻頁
+            detailTouchStart = e.changedTouches[0].screenX;
+            return; 
+        }
+        
+        // 原本開啟選單的邏輯...
+        startX = e.touches[0].pageX;
+    }, false);
+    
+    // 針對詳情頁的翻頁手勢
+    const detailOverlay = document.getElementById('law-detail-overlay');
+    detailOverlay.addEventListener('touchend', e => {
+        let touchEnd = e.changedTouches[0].screenX;
+        let diff = detailTouchStart - touchEnd;
+        
+        // 只有在詳情頁顯示時才運作
+        if (Math.abs(diff) > 80) {
+            if (diff > 0) navLaw(1);  // 左滑下一條
+            else navLaw(-1);         // 右滑上一條
+        }
+        // 重要：防止事件冒泡觸發到底層選單
+        e.stopPropagation();
     }, false);
 
+    function openLawDetail(index) {
+    currentLawIdx = index;
+    updateDetailView();
+    // 確保這裡是用 flex 顯示，並加上 z-index 強制置頂
+    const overlay = document.getElementById('law-detail-overlay');
+    overlay.style.display = 'flex';
+    overlay.scrollTop = 0; 
+    }
+    
     function toggleMenu(forceState) {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
@@ -536,40 +563,40 @@ if (detailOverlay) {
     }, false);
 }
 
-// 3. 修正後的 69 條編號邏輯 (完全替換舊的 updateDetailView)
 function updateDetailView() {
     const item = window.allArticles[currentLawIdx];
-    if (!item || item.ArticleType === "C") return;
+    if (!item) return;
 
     document.getElementById('detail-title').innerText = item.ArticleNo;
     
     let itemIdx = 0;
-    const bodyLines = item.ArticleContent.split(/\n/).map(line => {
+    const contentLines = item.ArticleContent.split(/\n/);
+    
+    const bodyHtml = contentLines.map(line => {
         const txt = line.trim();
         if (!txt || txt === item.ArticleNo) return "";
 
-        // 層級判斷：一、(款) / (一) (目)
-        const isSection = /^[一二三四五六七八九十]+、/.test(txt); 
-        const isItem = /^\([一二三四五六七八九十]+\)/.test(txt);  
+        // 判斷是否為「款」：例如 一、自行車
+        const isSection = /^[一二三四五六七八九十]+、/.test(txt);
+        // 判斷是否為「目」：例如 (一) 腳踏自行車
+        const isItem = /^\([一二三四五六七八九十]+\)/.test(txt);
 
-        // 只有「非款、非目」的文字才計入「項」的編號
+        // 如果既不是款也不是目，才算是一「項」，給予數字編號
         if (!isSection && !isItem) {
             itemIdx++;
-            return `<div style="display: flex; margin-bottom: 12px; line-height: 1.6;">
-                        <span style="color: #60a5fa; font-weight: bold; width: 28px; flex-shrink: 0;">${itemIdx}</span>
-                        <span style="flex: 1;">${txt}</span>
+            return `<div style="display: flex; margin-bottom: 12px; align-items: flex-start;">
+                        <span style="color: #60a5fa; font-weight: bold; width: 25px; flex-shrink: 0;">${itemIdx}</span>
+                        <span style="flex: 1; line-height: 1.6;">${txt}</span>
                     </div>`;
         }
 
-        // 款與目的顯示 (款縮排 28px，目縮排 60px)
-        const padding = isItem ? "60px" : "28px";
+        // 款與目的縮排處理
+        const indent = isItem ? "45px" : "25px";
         const color = isItem ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.9)";
-        return `<div style="padding-left: ${padding}; margin-bottom: 8px; color: ${color}; font-size: 0.95em; line-height: 1.5;">${txt}</div>`;
-    }).filter(l => l !== "").join('');
+        return `<div style="padding-left: ${indent}; margin-bottom: 8px; color: ${color}; line-height: 1.5;">${txt}</div>`;
+    }).join('');
 
-    document.getElementById('detail-content').innerHTML = bodyLines;
-    // 每次翻頁自動回到頂部
-    document.getElementById('detail-content').scrollTop = 0;
+    document.getElementById('detail-content').innerHTML = bodyHtml;
 }
     
 </script>
