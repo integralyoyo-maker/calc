@@ -303,266 +303,97 @@
     </div>
 </div>
 <script>
-       // 在原有的觸控監聽中加入判斷
-    document.addEventListener('touchstart', function(e) {
-        // 如果詳情視窗是打開的，就「不」執行開啟選單的邏輯
-        const overlay = document.getElementById('law-detail-overlay');
-        if (overlay.style.display === 'flex') {
-            // 這裡可以只處理詳情頁的左右翻頁
-            detailTouchStart = e.changedTouches[0].screenX;
-            return; 
-        }
-        
-        // 原本開啟選單的邏輯...
-        startX = e.touches[0].pageX;
-    }, false);
+      // 全域變數
+let allArticles = [];
+let currentLawIdx = 0;
+let startX = 0; // 用於主選單滑動
+let detailTouchStart = 0; // 用於詳情頁翻頁
+
+// --- 基礎頁面切換與選單 ---
+function toggleMenu(forceState) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const isActive = (typeof forceState === 'boolean') ? forceState : !sidebar.classList.contains('active');
+    sidebar.classList.toggle('active', isActive);
+    overlay.classList.toggle('active', isActive);
+}
+
+function showPage(pId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const targetPage = document.getElementById(pId);
+    if (targetPage) targetPage.classList.add('active');
+    toggleMenu(false);
+}
+
+function toggleTheme() {
+    const b = document.body; 
+    const icon = document.getElementById('theme-icon');
+    if(b.getAttribute('data-theme')==='light'){
+        b.setAttribute('data-theme','dark'); icon.innerText='☀️';
+    } else {
+        b.setAttribute('data-theme','light'); icon.innerText='🌙';
+    }
+}
+
+// --- 手勢處理：區隔主頁面滑動與詳情頁翻頁 ---
+document.addEventListener('touchstart', function(e) {
+    const overlay = document.getElementById('law-detail-overlay');
+    // 如果詳情頁是開的，只記錄詳情頁滑動起點，不執行主選單邏輯
+    if (overlay.style.display === 'flex') {
+        detailTouchStart = e.changedTouches[0].screenX;
+        return; 
+    }
+    startX = e.touches[0].pageX;
+}, false);
+
+document.addEventListener('touchend', function(e) {
+    const overlay = document.getElementById('law-detail-overlay');
     
-    // 針對詳情頁的翻頁手勢
-    const detailOverlay = document.getElementById('law-detail-overlay');
-    detailOverlay.addEventListener('touchend', e => {
+    // 詳情頁翻頁邏輯
+    if (overlay.style.display === 'flex') {
         let touchEnd = e.changedTouches[0].screenX;
         let diff = detailTouchStart - touchEnd;
-        
-        // 只有在詳情頁顯示時才運作
         if (Math.abs(diff) > 80) {
-            if (diff > 0) navLaw(1);  // 左滑下一條
-            else navLaw(-1);         // 右滑上一條
+            if (diff > 0) navLaw(1);  // 左滑 -> 下一條
+            else navLaw(-1);         // 右滑 -> 上一條
         }
-        // 重要：防止事件冒泡觸發到底層選單
-        e.stopPropagation();
-    }, false);
+        return;
+    }
 
-    function openLawDetail(index) {
+    // 主頁面開啟選單邏輯 (右滑開選單)
+    let endX = e.changedTouches[0].pageX;
+    if (endX - startX > 100 && startX < 50) {
+        toggleMenu(true);
+    }
+}, false);
+
+// --- 法條詳情控制函式 (修正打不開問題) ---
+function openLawDetail(index) {
     currentLawIdx = index;
     updateDetailView();
-    // 確保這裡是用 flex 顯示，並加上 z-index 強制置頂
     const overlay = document.getElementById('law-detail-overlay');
     overlay.style.display = 'flex';
-    overlay.scrollTop = 0; 
+    document.getElementById('detail-content').scrollTop = 0;
+}
+
+function closeLawDetail() {
+    document.getElementById('law-detail-overlay').style.display = 'none';
+}
+
+function navLaw(step) {
+    let newIdx = currentLawIdx + step;
+    // 跳過章節標題 (ArticleType === "C")
+    while (window.allArticles[newIdx] && window.allArticles[newIdx].ArticleType === "C") {
+        newIdx += step;
     }
-    
-    function toggleMenu(forceState) {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const isActive = (typeof forceState === 'boolean') ? forceState : !sidebar.classList.contains('active');
-        sidebar.classList.toggle('active', isActive);
-        overlay.classList.toggle('active', isActive);
-    }
-
-    function showPage(pId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pId).classList.add('active');
-        toggleMenu(false);
-    }
-
-    function toggleTheme() {
-        const b = document.body; const icon = document.getElementById('theme-icon');
-        if(b.getAttribute('data-theme')==='light'){
-            b.setAttribute('data-theme','dark'); icon.innerText='☀️';
-        } else {
-            b.setAttribute('data-theme','light'); icon.innerText='🌙';
-        }
-    }
-
-    // 計算邏輯：完全在地執行，不依賴 API
-    function getBaseDate(str) {
-        if(!str || str.length < 6) return new Date();
-        const yearLen = str.length - 4;
-        const y = parseInt(str.substring(0, yearLen)) + 1911;
-        const m = parseInt(str.substring(yearLen, yearLen + 2)) - 1;
-        const d = parseInt(str.substring(yearLen + 2));
-        return new Date(y, m, d);
-    }
-
-    function toROCStr(d) {
-        return `${d.getFullYear()-1911}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-    }
-
-    function updateDates() {
-        const base = getBaseDate(document.getElementById('cite-date').value);
-        let d30 = new Date(base); d30.setDate(base.getDate() + 30);
-        let d45 = new Date(base); d45.setDate(base.getDate() + 45);
-        document.getElementById('date-30').innerText = toROCStr(d30);
-        document.getElementById('date-45').innerText = toROCStr(d45);
-    }
-
-    function updateAge() {
-        const val = document.getElementById('birth-date').value;
-        if(val.length < 6) return;
-        const birth = getBaseDate(val); const now = new Date();
-        let age = now.getFullYear() - birth.getFullYear();
-        const mDiff = now.getMonth() - birth.getMonth();
-        if (mDiff < 0 || (mDiff === 0 && now.getDate() < birth.getDate())) age--;
-        document.getElementById('age-result').innerText = age > 0 ? age : 0;
-    }
-
-    function calcFPS() {
-        const d=parseFloat(document.getElementById('d_fps').value);
-        const g=parseFloat(document.getElementById('g_fps').value);
-        const s=parseFloat(document.getElementById('s_fps').value);
-        if(d&&g&&s) document.getElementById('res_fps').innerText=((d/g)*s*3.6).toFixed(2);
-    }
-
-    function calcSkid() {
-        const d=parseFloat(document.getElementById('d_skid').value);
-        const f=parseFloat(document.getElementById('f_skid_select').value);
-        if(d && f) document.getElementById('res_skid').innerText = Math.sqrt(254 * d * f).toFixed(2);
-    }
-
-    function calcOver() {
-        const a=parseFloat(document.getElementById('w_act').value);
-        const l=parseFloat(document.getElementById('w_lim').value);
-        const resOver = document.getElementById('res_over');
-        const oStatus = document.getElementById('o_status');
-        const oFineRow = document.getElementById('fine-row');
-        const oFine = document.getElementById('o_fine');
-        const oFineDetail = document.getElementById('fine-detail');
-        const oLaw = document.getElementById('o_law');
-
-        if(!a||!l) return;
-        const diff = a-l; const per = (diff/l)*100;
-        resOver.style.display="block";
-        oStatus.innerText = diff > 0 ? `超載 ${diff.toFixed(3)} 噸 (${per.toFixed(2)}%)` : "未超載";
-        
-        if(diff <= 0) { oFineRow.style.display = "none"; oFineDetail.style.display = "none"; oLaw.style.display = "none"; return; }
-
-        oFineRow.style.display = "flex"; oFineDetail.style.display = "block"; oLaw.style.display = "block";
-        const chargedTons = Math.ceil(diff);
-        let extra = 0;
-        if (chargedTons > 30) extra = 5000;
-        else if (chargedTons > 20) extra = 3000;
-        else if (chargedTons > 10) extra = 2000;
-        else extra = 1000;
-        
-        let fine = 10000 + (chargedTons * extra);
-        oFine.innerText = `新臺幣 ${fine.toLocaleString()} 元`;
-        oFineDetail.innerText = `明細：基本 \$10,000 + (加罰計 ${chargedTons} 噸 × \$${extra.toLocaleString()})`;
-
-        let msg = "";
-        if(per > 20) msg = "🔴 <b>超載逾 20%：</b><br>應責令當場卸貨分裝，當場禁止其通行。";
-        else if(per > 10) msg = "🟡 <b>超載 10% - 20%：</b><br>應當場卸貨分裝，或責令其於二小時內改正，逾二小時不改正者，得連續舉發。";
-        else msg = "🟢 <b>超載未逾 10%：</b><br>未嚴重危害交通安全、秩序，且情節輕微，以不舉發為適當。行為人發生交通事故，仍得舉發。";
-        oLaw.innerHTML = msg;
-    }
-// 顯示法條頁面並讀取資料
-async function showLawPage() {
-    showPage('law-page');
-    const container = document.getElementById('law-container');
-    if (window.allArticles && window.allArticles.length > 0) return;
-
-    try {
-        const response = await fetch('./traffic_law.json');
-        const data = await response.json();
-        window.allArticles = data.LawArticles;
-
-        // 建立頂部資訊 HTML
-        const headerHtml = `
-            <div class="law-info-header">
-                <div style="font-weight:bold; color:var(--accent-color);">${data.LawName}</div>
-                <div class="law-date-row">
-                    <span>📅 修正：${data.LawModifiedDate || '2026/01/14'}</span>
-                    <span>🚀 施行：${data.LawEffectiveDate || '2026/03/13'}</span>
-                </div>
-            </div>`;
-
-        renderLaws(window.allArticles, headerHtml);
-    } catch (e) {
-        container.innerHTML = "讀取 traffic_law.json 失敗";
+    if (newIdx >= 0 && newIdx < window.allArticles.length) {
+        currentLawIdx = newIdx;
+        updateDetailView();
+        document.getElementById('detail-content').scrollTop = 0;
     }
 }
 
-function renderLaws(articles, headerHtml = "") {
-    const container = document.getElementById('law-container');
-    const getCircle = (n) => ["", "１", "２", "３", "４", "５", "６", "７", "８", "９", "１０", "１１", "１２", "１３", "１４", "１５"][n] || `${n}.`;
-
-    const listHtml = articles.map((item) => {
-        // 重要：在原始總表中找出這條法條的真正位置
-        const originalIdx = window.allArticles.indexOf(item);
-
-        if (item.ArticleType === "C" || !item.ArticleNo) {
-            return `<div class="law-chapter-header">${item.ArticleContent.trim()}</div>`;
-        }
-
-        let itemIdx = 0;
-        const bodyLines = item.ArticleContent.split(/\n/).map(line => {
-            const txt = line.trim();
-            if (!txt || txt === item.ArticleNo || txt.replace(/\s+/g, '') === item.ArticleNo.replace(/\s+/g, '')) return "";
-            if (/^[一二三四五六七八九十]+、/.test(txt)) return `<div class="law-sub-row">${txt}</div>`;
-            itemIdx++;
-            return `<div class="law-item-row"><span class="item-num">${getCircle(itemIdx)}</span><span class="item-text">${txt}</span></div>`;
-        }).filter(line => line !== "").join('');
-
-        // 這裡改用 originalIdx
-        return `
-            <div class="law-card-box" onclick="openLawDetail(${originalIdx})">
-                <div class="law-no-header">${item.ArticleNo}</div>
-                <div style="padding: 10px 0;">${bodyLines}</div>
-            </div>`;
-    }).join('');
-
-    container.innerHTML = headerHtml + listHtml;
-}
-
-
-// 輔助函數：轉換數字為圓圈數字 (支援到 20 項，道交條例夠用了)
-function getCircleNum(n) {
-    const circles = ["",  "１", "２", "３", "４", "５", "６", "７", "８", "９", "１０", "１１", "１２", "１３", "１４", "１５"];
-    return circles[n] || `${n}.`;
-}
-          function filterLaws() {
-            const term = document.getElementById('law-search-box').value.trim();
-            if (!window.allArticles) return;
-        
-            // 如果沒輸入就顯示全部
-            if (!term) {
-                renderLaws(window.allArticles);
-                return;
-            }
-        
-            const filtered = window.allArticles.filter(a => 
-                a.ArticleNo.includes(term) || a.ArticleContent.includes(term)
-            );
-        
-            // 渲染過濾後的結果
-            renderLaws(filtered);
-        
-            // [進階]：在結果中高亮關鍵字
-            if (term.length >= 1) {
-                const contentElems = document.querySelectorAll('.law-content, .law-no-title');
-                contentElems.forEach(el => {
-                    const regex = new RegExp(`(${term})`, 'gi');
-                    el.innerHTML = el.innerHTML.replace(regex, '<mark style="background:#ffab40; color:#000; border-radius:2px;">$1</mark>');
-                });
-            }
-        }
-    
-    updateDates();
-    let currentLawIdx = 0;
-
-// 1. 詳情頁專用手勢變數 (放在 script 內任何位置)
-let detailTouchStart = 0;
-
-// 2. 監聽詳情頁手勢 (建議放在 updateDates() 之後)
-const detailOverlay = document.getElementById('law-detail-overlay');
-if (detailOverlay) {
-    detailOverlay.addEventListener('touchstart', e => { 
-        detailTouchStart = e.changedTouches[0].screenX; 
-    }, {passive: true});
-
-    detailOverlay.addEventListener('touchend', e => {
-        let touchEnd = e.changedTouches[0].screenX;
-        let diff = detailTouchStart - touchEnd;
-        
-        // 如果側邊欄是開啟狀態，不執行翻頁
-        if (document.getElementById('sidebar').classList.contains('active')) return;
-
-        if (Math.abs(diff) > 70) { 
-            if (diff > 0) navLaw(1);  // 向左滑 -> 下一條
-            else navLaw(-1);         // 向右滑 -> 上一條
-        }
-    }, false);
-}
-
+// --- 核心編號邏輯：解決 69 條與編號跑掉 ---
 function updateDetailView() {
     const item = window.allArticles[currentLawIdx];
     if (!item) return;
@@ -574,14 +405,14 @@ function updateDetailView() {
     
     const bodyHtml = contentLines.map(line => {
         const txt = line.trim();
-        if (!txt || txt === item.ArticleNo) return "";
+        // 排除標題重複顯示
+        if (!txt || txt === item.ArticleNo || txt.replace(/\s+/g,'') === item.ArticleNo.replace(/\s+/g,'')) return "";
 
-        // 判斷是否為「款」：例如 一、自行車
+        // 精準判定：款(一、) 與 目((一))
         const isSection = /^[一二三四五六七八九十]+、/.test(txt);
-        // 判斷是否為「目」：例如 (一) 腳踏自行車
         const isItem = /^\([一二三四五六七八九十]+\)/.test(txt);
 
-        // 如果既不是款也不是目，才算是一「項」，給予數字編號
+        // 只有「非款且非目」的內容才視為「項」，給予數字編號
         if (!isSection && !isItem) {
             itemIdx++;
             return `<div style="display: flex; margin-bottom: 12px; align-items: flex-start;">
@@ -590,14 +421,76 @@ function updateDetailView() {
                     </div>`;
         }
 
-        // 款與目的縮排處理
+        // 款與目的縮排顯示 (不計入數字編號)
         const indent = isItem ? "45px" : "25px";
         const color = isItem ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.9)";
-        return `<div style="padding-left: ${indent}; margin-bottom: 8px; color: ${color}; line-height: 1.5;">${txt}</div>`;
+        return `<div style="padding-left: ${indent}; margin-bottom: 8px; color: ${color}; line-height: 1.5; font-size: 0.95em;">${txt}</div>`;
     }).join('');
 
     document.getElementById('detail-content').innerHTML = bodyHtml;
 }
+
+// --- 法條載入與搜尋 ---
+async function showLawPage() {
+    showPage('law-page');
+    if (window.allArticles && window.allArticles.length > 0) return;
+
+    const container = document.getElementById('law-container');
+    try {
+        const response = await fetch('./traffic_law.json');
+        const data = await response.json();
+        window.allArticles = data.LawArticles;
+        renderLaws(window.allArticles);
+    } catch (e) {
+        container.innerHTML = `<div style="padding:20px;">讀取 traffic_law.json 失敗</div>`;
+    }
+}
+
+function renderLaws(articles) {
+    const container = document.getElementById('law-container');
+    
+    const listHtml = articles.map((item) => {
+        const originalIdx = window.allArticles.indexOf(item);
+        if (item.ArticleType === "C") {
+            return `<div class="law-chapter-header">${item.ArticleContent.trim()}</div>`;
+        }
+
+        // 列表頁使用與詳情頁相同的編號邏輯，防止 10/11 項跑掉
+        let itemIdx = 0;
+        const bodyLines = item.ArticleContent.split(/\n/).slice(0, 3).map(line => {
+            const txt = line.trim();
+            if (!txt || txt === item.ArticleNo) return "";
+            const isSection = /^[一二三四五六七八九十]+、/.test(txt);
+            const isItem = /^\([一二三四五六七八九十]+\)/.test(txt);
+            
+            if (!isSection && !isItem) {
+                itemIdx++;
+                return `<div class="law-item-row"><span class="item-num">${itemIdx}</span><span class="item-text">${txt.substring(0,30)}...</span></div>`;
+            }
+            return ""; // 列表頁簡略顯示，不顯示款目
+        }).filter(l => l !== "").join('');
+
+        return `
+            <div class="law-card-box" onclick="openLawDetail(${originalIdx})">
+                <div class="law-no-header">${item.ArticleNo}</div>
+                <div style="padding: 10px 0;">${bodyLines}</div>
+            </div>`;
+    }).join('');
+
+    container.innerHTML = listHtml;
+}
+
+function filterLaws() {
+    const term = document.getElementById('law-search-box').value.trim();
+    if (!window.allArticles) return;
+    const filtered = window.allArticles.filter(a => 
+        a.ArticleNo.includes(term) || (a.ArticleContent && a.ArticleContent.includes(term))
+    );
+    renderLaws(filtered);
+}
+
+// 初始化
+updateDates();
     
 </script>
     
