@@ -512,33 +512,31 @@ function getCircleNum(n) {
     updateDates();
     let currentLawIdx = 0;
 
-// 開啟詳情
-function openLawDetail(index) {
-    currentLawIdx = index;
-    updateDetailView();
-    document.getElementById('law-detail-overlay').style.display = 'flex';
-}
+// 1. 詳情頁專用手勢變數 (放在 script 內任何位置)
+let detailTouchStart = 0;
 
-// 關閉詳情
-function closeLawDetail() {
-    document.getElementById('law-detail-overlay').style.display = 'none';
-}
+// 2. 監聽詳情頁手勢 (建議放在 updateDates() 之後)
+const detailOverlay = document.getElementById('law-detail-overlay');
+if (detailOverlay) {
+    detailOverlay.addEventListener('touchstart', e => { 
+        detailTouchStart = e.changedTouches[0].screenX; 
+    }, {passive: true});
 
-// 切換前後條
-function navLaw(direction) {
-    const nextIdx = currentLawIdx + direction;
-    // 檢查邊界且跳過「章標題」
-    if (nextIdx >= 0 && nextIdx < window.allArticles.length) {
-        currentLawIdx = nextIdx;
-        // 如果是標題，就再跳一格
-        if (window.allArticles[currentLawIdx].ArticleType === "C") {
-            navLaw(direction); 
-            return;
+    detailOverlay.addEventListener('touchend', e => {
+        let touchEnd = e.changedTouches[0].screenX;
+        let diff = detailTouchStart - touchEnd;
+        
+        // 如果側邊欄是開啟狀態，不執行翻頁
+        if (document.getElementById('sidebar').classList.contains('active')) return;
+
+        if (Math.abs(diff) > 70) { 
+            if (diff > 0) navLaw(1);  // 向左滑 -> 下一條
+            else navLaw(-1);         // 向右滑 -> 上一條
         }
-        updateDetailView();
-    }
+    }, false);
 }
 
+// 3. 修正後的 69 條編號邏輯 (完全替換舊的 updateDetailView)
 function updateDetailView() {
     const item = window.allArticles[currentLawIdx];
     if (!item || item.ArticleType === "C") return;
@@ -548,31 +546,32 @@ function updateDetailView() {
     let itemIdx = 0;
     const bodyLines = item.ArticleContent.split(/\n/).map(line => {
         const txt = line.trim();
-        // 排除空白與重複條號
-        if (!txt || txt === item.ArticleNo || txt.replace(/\s+/g, '') === item.ArticleNo.replace(/\s+/g, '')) return "";
+        if (!txt || txt === item.ArticleNo) return "";
 
-        // 【精準判斷層級】
-        const isSubItem = /^[一二三四五六七八九十]+、/.test(txt); // 抓：一、
-        const isEyeItem = /^\([一二三四五六七八九十]+\)/.test(txt); // 抓：(一)
+        // 層級判斷：一、(款) / (一) (目)
+        const isSection = /^[一二三四五六七八九十]+、/.test(txt); 
+        const isItem = /^\([一二三四五六七八九十]+\)/.test(txt);  
 
-        // 如果是款或目，不增加 itemIdx，直接給予縮排
-        if (isSubItem || isEyeItem) {
-            const padding = isEyeItem ? "82px" : "32px"; // 目縮排更多
-            return `<div style="padding-left: ${padding}; margin-bottom: 8px; width: 100%; box-sizing: border-box; line-height: 1.6; color: rgba(255,255,255,0.9); font-size: 0.95em;">${txt}</div>`;
+        // 只有「非款、非目」的文字才計入「項」的編號
+        if (!isSection && !isItem) {
+            itemIdx++;
+            return `<div style="display: flex; margin-bottom: 12px; line-height: 1.6;">
+                        <span style="color: #60a5fa; font-weight: bold; width: 28px; flex-shrink: 0;">${itemIdx}</span>
+                        <span style="flex: 1;">${txt}</span>
+                    </div>`;
         }
 
-        // 真正的「項」：增加數字編號
-        itemIdx++;
-        // 修正編號樣式：使用固定寬度 span 確保 10, 11 不會跑掉
-        return `<div style="display: flex; width: 100%; margin-bottom: 12px; line-height: 1.6;">
-                    <span style="color: #60a5fa; font-weight: bold; width: 32px; flex-shrink: 0; display: inline-block; text-align: left;">${itemIdx}</span>
-                    <span style="flex: 1; word-break: break-all;">${txt}</span>
-                </div>`;
+        // 款與目的顯示 (款縮排 28px，目縮排 60px)
+        const padding = isItem ? "60px" : "28px";
+        const color = isItem ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.9)";
+        return `<div style="padding-left: ${padding}; margin-bottom: 8px; color: ${color}; font-size: 0.95em; line-height: 1.5;">${txt}</div>`;
     }).filter(l => l !== "").join('');
 
     document.getElementById('detail-content').innerHTML = bodyLines;
+    // 每次翻頁自動回到頂部
+    document.getElementById('detail-content').scrollTop = 0;
 }
-
+    
 </script>
     
 <div id="law-detail-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color); display:none; flex-direction:column; z-index:3000;">
@@ -590,8 +589,8 @@ function updateDetailView() {
     <div id="detail-content" style="flex:1; overflow-y:auto; padding:20px; display: flex; flex-direction: column;"></div>
     
     <div style="display:flex; justify-content:space-between; padding:15px 20px 30px; background:var(--card-bg); border-top:1px solid var(--border-color);">
-        <button onclick="navLaw(-1)" style="width:45%; border-radius:12px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color); margin:0;">⬅ 上一條</button>
-        <button onclick="navLaw(1)" style="width:45%; border-radius:12px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color); margin:0;">下一條 ➡️</button>
+    <button class="nav-btn" onclick="navLaw(-1)" style="width:45%; border-radius:25px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color); margin:0;">⬅ 上一條</button>
+    <button class="nav-btn" onclick="navLaw(1)" style="width:45%; border-radius:25px; height:50px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color); margin:0;">下一條 ➡️</button>
     </div>
 </div>
 </body>
