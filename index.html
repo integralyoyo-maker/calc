@@ -54,6 +54,28 @@
         .res-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 16px; }
         .val-text { color: #ffab40; font-weight: bold; }
         #fine-detail { font-size: 14px; color: #a0a0a0; margin-top: 5px; border-top: 1px solid #444; padding-top: 5px; }
+
+        /* 🖼️ 轉jpg */
+        .jpg-card { max-width: 560px; }
+        .dropzone { border: 2px dashed var(--accent-color); border-radius: 14px; padding: 34px 14px; text-align: center; cursor: pointer; background: var(--input-bg); transition: 0.2s; line-height: 1.7; }
+        .dropzone.dragover { background: rgba(138,180,248,0.18); transform: scale(1.01); }
+        .dropzone .dz-icon { font-size: 40px; }
+        .dropzone .dz-sub { font-size: 13px; opacity: 0.7; }
+        .btn-secondary { background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); margin-top: 12px; }
+        .save-info { font-size: 13px; margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--border-color); line-height: 1.6; word-break: break-all; }
+        .jpg-opt { display: flex; gap: 10px; align-items: center; margin-top: 12px; font-size: 14px; }
+        .jpg-opt label { margin: 0; white-space: nowrap; }
+        .jpg-opt select { padding: 8px; font-size: 14px; }
+        .jpg-item { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); }
+        .jpg-item:last-child { border-bottom: none; }
+        .jpg-thumbs { display: flex; gap: 4px; flex-wrap: wrap; max-width: 130px; }
+        .jpg-thumbs img { width: 36px; height: 48px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); background: #fff; }
+        .jpg-meta { flex: 1; min-width: 0; font-size: 14px; }
+        .jpg-meta .jpg-name { font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .jpg-meta .jpg-state { font-size: 13px; opacity: 0.85; margin-top: 2px; word-break: break-all; }
+        .jpg-state.ok { color: #34C759; opacity: 1; }
+        .jpg-state.err { color: #ff5252; opacity: 1; }
+        .jpg-state.warn { color: #ffab40; opacity: 1; }
     </style>
 </head>
 <body data-theme="dark">
@@ -70,6 +92,7 @@
         <div class="sidebar-item" onclick="showPage('fps')">⏱️ 時速換算 (FPS)</div>
         <div class="sidebar-item" onclick="showPage('skid')">🚗 車速換算 (煞車痕)</div>
         <div class="sidebar-item" onclick="showPage('overload')">🚚 超載計算器</div>
+        <div class="sidebar-item" onclick="showPage('tojpg')">🖼️ 轉jpg (HEIF / Word)</div>
     </div>
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
@@ -189,6 +212,44 @@
                 <div id="fine-detail" style="display: none;"></div>
                 <div id="o_law" style="font-size:14px; margin-top:10px; color:#ffab40; line-height:1.6; border-top: 1px solid #444; padding-top: 10px;"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- 🖼️ 轉jpg 頁面：所有轉換都在本機瀏覽器內完成，檔案不會上傳 -->
+    <div id="tojpg" class="page">
+        <div class="card jpg-card" style="border-top-color: #8ab4f8;">
+            <h2>🖼️ 轉 JPG (HEIF / Word)</h2>
+
+            <div class="dropzone" id="jpg-drop">
+                <div class="dz-icon">📥</div>
+                <div><b>把 .heic / .heif / .doc / .docx 拖曳到這裡</b></div>
+                <div class="dz-sub">或點一下選擇檔案（可一次多個）</div>
+            </div>
+            <input type="file" id="jpg-file" multiple accept=".heic,.heif,.doc,.docx,image/heic,image/heif" style="display:none">
+
+            <div class="save-info" id="jpg-save-info"></div>
+            <button class="btn-secondary" id="jpg-pick-dir" onclick="pickJpgDir()">📁 選擇儲存資料夾（請選「桌面」）</button>
+
+            <div class="jpg-opt">
+                <label for="jpg-scale">Word 解析度</label>
+                <select id="jpg-scale" style="width:auto;">
+                    <option value="1.5">標準 (1.5x)</option>
+                    <option value="2" selected>高 (2x)</option>
+                    <option value="3">超高 (3x，較慢)</option>
+                </select>
+            </div>
+
+            <div style="font-size:12px; opacity:0.7; margin-top:12px; line-height:1.6;">
+                🔒 全程在你的電腦瀏覽器內轉換，檔案不會上傳到任何伺服器。<br>
+                Word 多頁文件會輸出多張圖：檔名_p1.jpg、檔名_p2.jpg…<br>
+                舊版 .doc 僅還原文字內容（不含圖片、表格與格式）；需要完整版面請先另存為 .docx。
+            </div>
+        </div>
+
+        <div class="card jpg-card" id="jpg-list-card" style="display:none;">
+            <h2>轉換結果</h2>
+            <div id="jpg-list"></div>
+            <button id="jpg-save-all" class="btn-secondary" style="display:none;" onclick="saveAllPendingJpg()">💾 儲存尚未存檔的圖片</button>
         </div>
     </div>
 
@@ -346,6 +407,286 @@
         else msg = "🟢 <b>超載未逾 10%：</b><br>未嚴重危害交通安全、秩序，且情節輕微，以不舉發為適當。行為人發生交通事故，仍得舉發。";
         oLaw.innerHTML = msg;
     }
+
+    // ======================================================================
+    // 🖼️ 轉jpg：HEIF / DOC / DOCX → JPG（全程在瀏覽器本機處理，不上傳）
+    // ======================================================================
+    const JPG = { dir: null, queue: Promise.resolve(), items: [], libs: {} };
+    const FSA = typeof window.showDirectoryPicker === 'function';
+
+    // ---- 依需要才載入函式庫（heic-to 約 3MB，避免拖慢其他頁面）----
+    function loadScript(src) {
+        if (JPG.libs[src]) return JPG.libs[src];
+        return JPG.libs[src] = new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = src; s.onload = res;
+            s.onerror = () => { delete JPG.libs[src]; rej(new Error('載入元件失敗：' + src)); };
+            document.head.appendChild(s);
+        });
+    }
+
+    // ---- IndexedDB：記住使用者選的資料夾（只存在本機瀏覽器）----
+    function idb() {
+        return new Promise((res, rej) => {
+            const r = indexedDB.open('calc-tools', 1);
+            r.onupgradeneeded = () => r.result.createObjectStore('kv');
+            r.onsuccess = () => res(r.result);
+            r.onerror = () => rej(r.error);
+        });
+    }
+    async function idbGet(k) {
+        try { const db = await idb(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (e) { return null; }
+    }
+    async function idbSet(k, v) {
+        try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); } catch (e) {}
+    }
+
+    function renderSaveInfo(extra) {
+        const el = document.getElementById('jpg-save-info');
+        const btn = document.getElementById('jpg-pick-dir');
+        if (!FSA) {
+            el.innerHTML = '⚠️ 此瀏覽器無法指定資料夾，轉好的 JPG 會直接下載到瀏覽器的「下載」資料夾。<br>想存到桌面：請用電腦版 Chrome / Edge，或到瀏覽器設定把下載位置改成桌面。';
+            btn.style.display = 'none';
+        } else if (JPG.dir) {
+            el.textContent = '💾 儲存位置：' + JPG.dir.name + (extra ? '　' + extra : '');
+            btn.textContent = '📁 更換儲存資料夾';
+        } else {
+            el.textContent = '💾 尚未選擇儲存位置。請先按下方按鈕選「桌面」，之後轉換會自動存入。';
+            btn.textContent = '📁 選擇儲存資料夾（請選「桌面」）';
+        }
+    }
+
+    async function pickJpgDir() {
+        if (!FSA) return null;
+        try {
+            const h = await window.showDirectoryPicker({ id: 'calc-jpg-out', mode: 'readwrite', startIn: 'desktop' });
+            JPG.dir = h; await idbSet('jpgDir', h); renderSaveInfo();
+            return h;
+        } catch (e) {
+            if (e.name !== 'AbortError') {
+                document.getElementById('jpg-save-info').textContent = '⚠️ 瀏覽器不允許選這個資料夾（' + e.name + '）。請在桌面建立一個子資料夾（例如「轉檔輸出」）再選它。';
+            }
+            return null;
+        }
+    }
+
+    // interactive=true 才會跳出授權視窗（需要使用者點擊）
+    async function ensureDir(interactive) {
+        if (!FSA) return null;
+        if (!JPG.dir) { if (!interactive) return null; await pickJpgDir(); if (!JPG.dir) return null; }
+        try {
+            let p = await JPG.dir.queryPermission({ mode: 'readwrite' });
+            if (p === 'granted') return JPG.dir;
+            if (!interactive) return null;
+            p = await JPG.dir.requestPermission({ mode: 'readwrite' });
+            return p === 'granted' ? JPG.dir : null;
+        } catch (e) { return null; }
+    }
+
+    function safeName(n) { return n.replace(/[\\\/:*?"<>|]/g, '_').trim() || 'file'; }
+
+    async function uniqueName(dir, name) {
+        const dot = name.lastIndexOf('.'), base = name.slice(0, dot), ext = name.slice(dot);
+        for (let i = 0; i < 1000; i++) {
+            const n = i === 0 ? name : `${base} (${i})${ext}`;
+            try { await dir.getFileHandle(n); } catch (e) { if (e.name === 'NotFoundError') return n; throw e; }
+        }
+        return `${base}_${Date.now()}${ext}`;
+    }
+
+    async function writeToDir(dir, name, blob) {
+        const finalName = await uniqueName(dir, name);
+        const fh = await dir.getFileHandle(finalName, { create: true });
+        const w = await fh.createWritable();
+        await w.write(blob); await w.close();
+        return finalName;
+    }
+
+    function downloadBlob(name, blob) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    }
+
+    // ---- 各格式轉換：回傳 [{name, blob}] ----
+    const canvasToJpg = (cv, q = 0.92) => new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('無法輸出 JPG')), 'image/jpeg', q));
+
+    async function convertHeic(file, base) {
+        await loadScript('lib/heic-to.js');
+        const blob = await window.HeicTo({ blob: file, type: 'image/jpeg', quality: 0.92 });
+        return [{ name: base + '.jpg', blob }];
+    }
+
+    async function convertDocx(file, base, scale) {
+        await loadScript('lib/jszip.min.js');
+        await loadScript('lib/docx-preview.min.js');
+        await loadScript('lib/html2canvas.min.js');
+        const host = document.createElement('div');
+        host.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff;';
+        document.body.appendChild(host);
+        try {
+            await docx.renderAsync(await file.arrayBuffer(), host, null, {
+                className: 'docx', inWrapper: true, breakPages: true,
+                ignoreWidth: false, ignoreHeight: false, renderHeaders: true, renderFooters: true
+            });
+            if (document.fonts && document.fonts.ready) await document.fonts.ready;
+            const wrap = host.querySelector('.docx-wrapper');
+            if (wrap) wrap.style.cssText += ';background:#fff;padding:0;';
+            const pages = [...host.querySelectorAll('section.docx')];
+            if (!pages.length) throw new Error('文件內容是空的或無法解析');
+            const out = [];
+            for (let i = 0; i < pages.length; i++) {
+                pages[i].style.boxShadow = 'none'; pages[i].style.margin = '0';
+                const cv = await html2canvas(pages[i], { scale, backgroundColor: '#ffffff', useCORS: true, logging: false });
+                out.push({ name: pages.length === 1 ? base + '.jpg' : `${base}_p${i + 1}.jpg`, blob: await canvasToJpg(cv) });
+            }
+            return out;
+        } finally { host.remove(); }
+    }
+
+    // 舊版 .doc：解析文字後以 A4 版面逐頁繪製
+    async function convertDoc(file, base, scale) {
+        await loadScript('lib/doc-extractor.js');
+        const r = await window.extractDocText(await file.arrayBuffer());
+        const text = (r.body || '').replace(/\r\n?/g, '\n').replace(/\u0007/g, '\t');
+        if (!text.trim()) throw new Error('文件內容是空的或無法解析');
+
+        const W = 794, H = 1123, M = 76, FS = 16, LH = 28;
+        const FONT = `${FS}px "Microsoft JhengHei","PingFang TC","Noto Sans CJK TC","Noto Sans TC",sans-serif`;
+        const meas = document.createElement('canvas').getContext('2d'); meas.font = FONT;
+        const maxW = W - M * 2, lines = [];
+        for (const para of text.split('\n')) {
+            if (!para.length) { lines.push(''); continue; }
+            const tokens = para.match(/[A-Za-z0-9_'’\-.,;:!?()%\/@#$&+=]+|\s|[\s\S]/gu) || [];
+            let cur = '';
+            for (const t of tokens) {
+                if (meas.measureText(cur + t).width > maxW && cur) { lines.push(cur.trimEnd()); cur = t.trim() ? t : ''; }
+                else cur += t;
+            }
+            lines.push(cur);
+        }
+        const perPage = Math.floor((H - M * 2) / LH), out = [];
+        const total = Math.max(1, Math.ceil(lines.length / perPage));
+        for (let p = 0; p < total; p++) {
+            const cv = document.createElement('canvas'); cv.width = W * scale; cv.height = H * scale;
+            const c = cv.getContext('2d'); c.scale(scale, scale);
+            c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
+            c.fillStyle = '#000'; c.font = FONT; c.textBaseline = 'top';
+            lines.slice(p * perPage, (p + 1) * perPage).forEach((ln, i) => c.fillText(ln, M, M + i * LH));
+            out.push({ name: total === 1 ? base + '.jpg' : `${base}_p${p + 1}.jpg`, blob: await canvasToJpg(cv) });
+        }
+        return out;
+    }
+
+    // 用檔頭判斷真實格式（不單靠副檔名）
+    async function sniff(file) {
+        const b = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+        if (b[0] === 0xD0 && b[1] === 0xCF && b[2] === 0x11 && b[3] === 0xE0) return 'doc';
+        if (b[0] === 0x50 && b[1] === 0x4B) return 'docx';
+        if (String.fromCharCode(...b.slice(4, 8)) === 'ftyp') return 'heic';
+        const ext = file.name.split('.').pop().toLowerCase();
+        return ['heic', 'heif'].includes(ext) ? 'heic' : ext;
+    }
+
+    // ---- 結果清單 UI ----
+    function addJpgRow(file) {
+        document.getElementById('jpg-list-card').style.display = '';
+        const row = document.createElement('div'); row.className = 'jpg-item';
+        row.innerHTML = '<div class="jpg-thumbs"></div><div class="jpg-meta"><div class="jpg-name"></div><div class="jpg-state"></div></div>';
+        row.querySelector('.jpg-name').textContent = file.name;
+        document.getElementById('jpg-list').prepend(row);
+        const st = row.querySelector('.jpg-state');
+        return {
+            set(msg, cls) { st.textContent = msg; st.className = 'jpg-state ' + (cls || ''); },
+            thumbs(results) {
+                const box = row.querySelector('.jpg-thumbs');
+                results.slice(0, 6).forEach(r => { const im = new Image(); im.src = r.url; box.appendChild(im); });
+            }
+        };
+    }
+
+    function refreshSaveAllBtn() {
+        const pending = JPG.items.filter(i => !i.saved).length;
+        const b = document.getElementById('jpg-save-all');
+        b.style.display = pending ? '' : 'none';
+        b.textContent = `💾 儲存尚未存檔的圖片（${pending}）`;
+    }
+
+    // 儲存一批結果；回傳 true 代表全部存好
+    async function saveResults(item, interactive) {
+        const targets = item.results.filter(r => !r.saved);
+        if (!targets.length) return true;
+        if (!FSA) {
+            targets.forEach(r => { downloadBlob(r.name, r.blob); r.saved = true; });
+            item.saved = true; item.ui.set(`✅ 完成，共 ${item.results.length} 張，已下載到瀏覽器下載資料夾`, 'ok');
+            return true;
+        }
+        const dir = await ensureDir(interactive);
+        if (!dir) { item.ui.set(`⚠️ 已轉好 ${item.results.length} 張，但尚未取得資料夾權限，請按下方「儲存」`, 'warn'); return false; }
+        try {
+            const names = [];
+            for (const r of targets) { names.push(await writeToDir(dir, r.name, r.blob)); r.saved = true; }
+            item.saved = true;
+            item.ui.set(`✅ 已存到「${dir.name}」：${names.join('、')}`, 'ok');
+            return true;
+        } catch (e) {
+            item.ui.set('❌ 存檔失敗：' + (e.message || e.name), 'err');
+            return false;
+        }
+    }
+
+    async function saveAllPendingJpg() {
+        // 這裡由使用者點擊觸發，可以跳出授權視窗
+        const first = JPG.items.find(i => !i.saved);
+        if (FSA && first && !(await ensureDir(true))) { renderSaveInfo(); return; }
+        for (const it of JPG.items.filter(i => !i.saved)) await saveResults(it, true);
+        refreshSaveAllBtn();
+    }
+
+    async function processJpgFile(file) {
+        const ui = addJpgRow(file);
+        const item = { ui, results: [], saved: false };
+        try {
+            ui.set('⏳ 轉換中…');
+            const kind = await sniff(file);
+            const base = safeName(file.name.replace(/\.[^.]+$/, ''));
+            const scale = parseFloat(document.getElementById('jpg-scale').value) || 2;
+            let res;
+            if (kind === 'heic') res = await convertHeic(file, base);
+            else if (kind === 'docx') res = await convertDocx(file, base, scale);
+            else if (kind === 'doc') res = await convertDoc(file, base, scale);
+            else throw new Error('不支援的格式（僅支援 .heic .heif .doc .docx）');
+            item.results = res.map(r => ({ ...r, url: URL.createObjectURL(r.blob), saved: false }));
+            ui.thumbs(item.results);
+            JPG.items.push(item);
+            await saveResults(item, false);
+        } catch (e) {
+            console.error(e);
+            ui.set('❌ ' + (e.message || '轉換失敗'), 'err');
+        }
+        refreshSaveAllBtn();
+    }
+
+    function handleJpgFiles(fileList) {
+        const files = [...fileList];
+        if (!files.length) return;
+        // 依序處理，避免同時轉太多檔案造成記憶體不足
+        files.forEach(f => { JPG.queue = JPG.queue.then(() => processJpgFile(f)); });
+    }
+
+    (function initJpg() {
+        const drop = document.getElementById('jpg-drop'), input = document.getElementById('jpg-file'), page = document.getElementById('tojpg');
+        drop.addEventListener('click', () => input.click());
+        input.addEventListener('change', () => { handleJpgFiles(input.files); input.value = ''; });
+        // 避免檔案掉在頁面其他位置時，瀏覽器直接把檔案開啟而離開網頁
+        ['dragover', 'drop'].forEach(ev => window.addEventListener(ev, e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault(); }));
+        ['dragenter', 'dragover'].forEach(ev => page.addEventListener(ev, () => drop.classList.add('dragover')));
+        ['dragleave', 'drop'].forEach(ev => page.addEventListener(ev, e => { if (ev === 'drop' || e.target === page) drop.classList.remove('dragover'); }));
+        page.addEventListener('drop', e => { drop.classList.remove('dragover'); handleJpgFiles(e.dataTransfer.files); });
+        renderSaveInfo();
+        if (FSA) idbGet('jpgDir').then(h => { if (h) { JPG.dir = h; renderSaveInfo(); } });
+    })();
 
     updateDates();
 </script>
