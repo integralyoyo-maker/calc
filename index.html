@@ -241,7 +241,8 @@
 
             <div style="font-size:12px; opacity:0.7; margin-top:12px; line-height:1.6;">
                 🔒 全程在你的電腦瀏覽器內轉換，檔案不會上傳到任何伺服器。<br>
-                Word 多頁文件會輸出多張圖：檔名_p1.jpg、檔名_p2.jpg…<br>
+                Word 每一頁輸出一張圖，檔名依頁碼：1.jpg、2.jpg…；HEIF 轉出的 JPG 檔名不變。<br>
+                📱 iPhone 小提醒：從「照片」挑選時，iOS 會先把 HEIF 自動轉成 JPEG 才交給網頁（此時網頁收到的已是 JPG，會直接存檔）。若要保留原始 HEIF，請先把相片存到「檔案」App 再從那裡選取。<br>
                 舊版 .doc 僅還原文字內容（不含圖片、表格與格式）；需要完整版面請先另存為 .docx。
             </div>
         </div>
@@ -539,7 +540,7 @@
             for (let i = 0; i < pages.length; i++) {
                 pages[i].style.boxShadow = 'none'; pages[i].style.margin = '0';
                 const cv = await html2canvas(pages[i], { scale, backgroundColor: '#ffffff', useCORS: true, logging: false });
-                out.push({ name: pages.length === 1 ? base + '.jpg' : `${base}_p${i + 1}.jpg`, blob: await canvasToJpg(cv) });
+                out.push({ name: `${i + 1}.jpg`, blob: await canvasToJpg(cv) });
             }
             return out;
         } finally { host.remove(); }
@@ -574,7 +575,7 @@
             c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
             c.fillStyle = '#000'; c.font = FONT; c.textBaseline = 'top';
             lines.slice(p * perPage, (p + 1) * perPage).forEach((ln, i) => c.fillText(ln, M, M + i * LH));
-            out.push({ name: total === 1 ? base + '.jpg' : `${base}_p${p + 1}.jpg`, blob: await canvasToJpg(cv) });
+            out.push({ name: `${p + 1}.jpg`, blob: await canvasToJpg(cv) });
         }
         return out;
     }
@@ -584,6 +585,7 @@
         const b = new Uint8Array(await file.slice(0, 16).arrayBuffer());
         if (b[0] === 0xD0 && b[1] === 0xCF && b[2] === 0x11 && b[3] === 0xE0) return 'doc';
         if (b[0] === 0x50 && b[1] === 0x4B) return 'docx';
+        if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return 'jpeg';
         if (String.fromCharCode(...b.slice(4, 8)) === 'ftyp') return 'heic';
         const ext = file.name.split('.').pop().toLowerCase();
         return ['heic', 'heif'].includes(ext) ? 'heic' : ext;
@@ -656,6 +658,11 @@
             if (kind === 'heic') res = await convertHeic(file, base);
             else if (kind === 'docx') res = await convertDocx(file, base, scale);
             else if (kind === 'doc') res = await convertDoc(file, base, scale);
+            else if (kind === 'jpeg') {
+                // iPhone 從「照片」選檔時常已先轉成 JPEG：不需再轉，原樣存檔（檔名不變，副檔名統一 .jpg）
+                res = [{ name: base + '.jpg', blob: file }];
+                ui.set('ℹ️ 此檔本身已是 JPEG（iPhone 選取時自動轉換），直接存檔…');
+            }
             else throw new Error('不支援的格式（僅支援 .heic .heif .doc .docx）');
             item.results = res.map(r => ({ ...r, url: URL.createObjectURL(r.blob), saved: false }));
             ui.thumbs(item.results);
