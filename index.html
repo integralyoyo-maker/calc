@@ -92,7 +92,7 @@
         <div class="sidebar-item" onclick="showPage('fps')">⏱️ 時速換算 (FPS)</div>
         <div class="sidebar-item" onclick="showPage('skid')">🚗 車速換算 (煞車痕)</div>
         <div class="sidebar-item" onclick="showPage('overload')">🚚 超載計算器</div>
-        <div class="sidebar-item" onclick="showPage('tojpg')">🖼️ 轉jpg (HEIF / Word)</div>
+        <div class="sidebar-item" onclick="showPage('tojpg')">🖼️ 轉jpg (HEIF / Word / PDF)</div>
     </div>
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
@@ -218,14 +218,14 @@
     <!-- 🖼️ 轉jpg 頁面：所有轉換都在本機瀏覽器內完成，檔案不會上傳 -->
     <div id="tojpg" class="page">
         <div class="card jpg-card" style="border-top-color: #8ab4f8;">
-            <h2>🖼️ 轉 JPG (HEIF / Word)</h2>
+            <h2>🖼️ 轉 JPG (HEIF / Word / PDF)</h2>
 
             <div class="dropzone" id="jpg-drop">
                 <div class="dz-icon">📥</div>
-                <div><b>把 .heic / .heif / .doc / .docx 拖曳到這裡</b></div>
+                <div><b>把 .heic / .heif / .doc / .docx / .pdf 拖曳到這裡</b></div>
                 <div class="dz-sub">或點一下選擇檔案（可一次多個）</div>
             </div>
-            <input type="file" id="jpg-file" multiple accept=".heic,.heif,.doc,.docx,image/heic,image/heif" style="display:none">
+            <input type="file" id="jpg-file" multiple accept=".heic,.heif,.doc,.docx,.pdf,.rtf,.htm,.html,.mht,image/heic,image/heif,application/pdf" style="display:none">
 
             <div class="save-info" id="jpg-save-info">
                 ⬇️ 轉換完成後會<b>自動下載</b>到瀏覽器的下載位置。<br>
@@ -236,7 +236,7 @@
             </div>
 
             <div class="jpg-opt">
-                <label for="jpg-scale">Word 解析度</label>
+                <label for="jpg-scale">Word / PDF 解析度</label>
                 <select id="jpg-scale" style="width:auto;">
                     <option value="1.5">標準 (1.5x)</option>
                     <option value="2" selected>高 (2x)</option>
@@ -246,7 +246,7 @@
 
             <div style="font-size:12px; opacity:0.7; margin-top:12px; line-height:1.6;">
                 🔒 全程在你的電腦瀏覽器內轉換，檔案不會上傳到任何伺服器。<br>
-                Word 每一頁輸出一張圖，檔名依頁碼：1.jpg、2.jpg…；HEIF 轉出的 JPG 檔名不變。<br>
+                Word、PDF 每一頁輸出一張圖，檔名依頁碼：1.jpg、2.jpg…；HEIF 轉出的 JPG 檔名不變。<br>
                 📱 iPhone 小提醒：從「照片」挑選時，iOS 會先把 HEIF 自動轉成 JPEG 才交給網頁（此時網頁收到的已是 JPG，會直接存檔）。若要保留原始 HEIF，請先把相片存到「檔案」App 再從那裡選取。<br>
                 舊版 .doc 會直接還原版面（表格、字型、對齊、底色等）；文件內的圖片、文字方塊與自動編號項目符號目前無法還原。
             </div>
@@ -585,9 +585,62 @@
             return await convertDocx(docxBlob, base, scale, { naturalLineHeight: true });
         } catch (e) {
             console.warn('版面解析失敗，改用純文字：', e);
-            if (ui) ui.note = '⚠️ 此 .doc 的版面無法完整解析，已改為僅輸出文字內容';
-            return await convertDocTextOnly(file, base, scale);
+            try {
+                const r = await convertDocTextOnly(file, base, scale);
+                if (ui) ui.note = '⚠️ 此 .doc 的版面無法完整解析，已改為僅輸出文字內容';
+                return r;
+            } catch (e2) {
+                throw new Error('無法解析此 Word 文件：' + (e.message || e2.message));
+            }
         }
+    }
+
+    // PDF → JPG：pdf.js 在瀏覽器本機渲染，每頁一張（檔名依頁碼 1.jpg、2.jpg…）
+    async function convertPdf(file, scale, ui) {
+        const pdfjs = await import('./lib/pdfjs/pdf.min.mjs');
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL('lib/pdfjs/pdf.worker.min.mjs', location.href).href;
+        let pdf;
+        try {
+            pdf = await pdfjs.getDocument({
+                data: new Uint8Array(await file.arrayBuffer()),
+                cMapUrl: new URL('lib/pdfjs/cmaps/', location.href).href, cMapPacked: true,
+                isEvalSupported: false
+            }).promise;
+        } catch (e) {
+            if (e && e.name === 'PasswordException') throw new Error('此 PDF 有密碼保護，無法轉換');
+            if (e && e.name === 'InvalidPDFException') throw new Error('PDF 檔案損毀或格式不正確');
+            throw e;
+        }
+        const out = [];
+        try {
+            for (let n = 1; n <= pdf.numPages; n++) {
+                ui.set(`⏳ 轉換中… 第 ${n}/${pdf.numPages} 頁`);
+                const page = await pdf.getPage(n);
+                const v1 = page.getViewport({ scale: 1 });
+                let s = scale * 96 / 72;                                   // PDF 1pt = 1/72 吋，換算成 96dpi 再乘上解析度倍數
+                if (v1.width * v1.height * s * s > 16e6) s = Math.sqrt(16e6 / (v1.width * v1.height));   // 避免超過手機瀏覽器畫布上限
+                const vp = page.getViewport({ scale: s });
+                const cv = document.createElement('canvas');
+                cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+                await page.render({ canvasContext: cv.getContext('2d'), viewport: vp, background: 'rgb(255,255,255)' }).promise;
+                out.push({ name: `${n}.jpg`, blob: await canvasToJpg(cv) });
+                page.cleanup();
+            }
+        } finally { await pdf.destroy(); }
+        return out;
+    }
+
+    // 副檔名是 .doc 但實際為 RTF / HTML / MHT / 純文字：在隔離的 iframe 內渲染後分頁輸出
+    async function convertLegacyText(file, kind, scale, ui) {
+        const label = { rtf: 'RTF', html: 'HTML 網頁', mht: 'MHT 單一網頁', text: '純文字' }[kind];
+        if (kind === 'wordxml') throw new Error('此檔案是 Word 2003 XML 格式，目前無法轉換；請用 Word 開啟後另存為 .docx 或 PDF');
+        await loadScript('lib/html2canvas.min.js');
+        await loadScript('lib/legacy-doc.js');
+        const u8 = new Uint8Array(await file.arrayBuffer());
+        const { html, page } = window.LegacyDoc.toHtml(u8, kind);
+        const blobs = await window.LegacyDoc.renderPages(html, page, scale, canvasToJpg, (k, n) => ui.set(`⏳ 轉換中… 第 ${k}/${n} 頁`));
+        ui.info = `ℹ️ 此檔案實際是 ${label} 格式（副檔名為 .doc）`;
+        return blobs.map((b, i) => ({ name: `${i + 1}.jpg`, blob: b }));
     }
 
     // 用檔頭判斷真實格式（不單靠副檔名）
@@ -597,8 +650,17 @@
         if (b[0] === 0x50 && b[1] === 0x4B) return 'docx';
         if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return 'jpeg';
         if (String.fromCharCode(...b.slice(4, 8)) === 'ftyp') return 'heic';
+        if (String.fromCharCode(...b.slice(0, 5)) === '%PDF-') return 'pdf';
         const ext = file.name.split('.').pop().toLowerCase();
-        return ['heic', 'heif'].includes(ext) ? 'heic' : ext;
+        if (['heic', 'heif'].includes(ext)) return 'heic';
+        // 副檔名是 .doc 等，內容卻不是 Word 二進位檔（政府系統匯出常見：HTML / RTF / MHT / 純文字）
+        if (['doc', 'docx', 'htm', 'html', 'mht', 'mhtml', 'rtf', 'txt', 'xml'].includes(ext)) {
+            await loadScript('lib/legacy-doc.js');
+            const head = new Uint8Array(await file.slice(0, 4096).arrayBuffer());
+            const k = window.LegacyDoc.sniff(head);
+            if (k) return k;       // 'rtf' | 'mht' | 'html' | 'wordxml' | 'text'
+        }
+        return ext;
     }
 
     // ---- 結果清單 UI ----
@@ -629,7 +691,7 @@
     async function downloadItem(item) {
         for (const r of item.results) { downloadBlob(r.name, r.blob); await sleep(300); }
         item.saved = true;
-        item.ui.set(`✅ 已下載 ${item.results.length} 張：${item.results.map(r => r.name).join('、')}` + (item.ui.note ? '　' + item.ui.note : ''), item.ui.note ? 'warn' : 'ok');
+        item.ui.set(`✅ 已下載 ${item.results.length} 張：${item.results.map(r => r.name).join('、')}` + (item.ui.info ? '　' + item.ui.info : '') + (item.ui.note ? '　' + item.ui.note : ''), item.ui.note ? 'warn' : 'ok');
     }
 
     // 按鈕：把目前清單內所有圖片再下載一次（例如瀏覽器攔截了自動下載時）
@@ -654,7 +716,9 @@
                 res = [{ name: base + '.jpg', blob: file }];
                 ui.set('ℹ️ 此檔本身已是 JPEG（iPhone 選取時自動轉換），直接下載…');
             }
-            else throw new Error('不支援的格式（僅支援 .heic .heif .doc .docx）');
+            else if (kind === 'pdf') res = await convertPdf(file, scale, ui);
+            else if (['rtf', 'html', 'mht', 'text', 'wordxml'].includes(kind)) res = await convertLegacyText(file, kind, scale, ui);
+            else throw new Error('不支援的格式（支援：HEIC/HEIF、Word .doc/.docx、PDF、RTF、HTML）');
             item.results = res.map(r => ({ ...r, url: URL.createObjectURL(r.blob), saved: false }));
             ui.thumbs(item.results);
             JPG.items.push(item);
