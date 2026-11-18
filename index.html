@@ -248,7 +248,7 @@
                 🔒 全程在你的電腦瀏覽器內轉換，檔案不會上傳到任何伺服器。<br>
                 Word 每一頁輸出一張圖，檔名依頁碼：1.jpg、2.jpg…；HEIF 轉出的 JPG 檔名不變。<br>
                 📱 iPhone 小提醒：從「照片」挑選時，iOS 會先把 HEIF 自動轉成 JPEG 才交給網頁（此時網頁收到的已是 JPG，會直接存檔）。若要保留原始 HEIF，請先把相片存到「檔案」App 再從那裡選取。<br>
-                舊版 .doc 僅還原文字內容（不含圖片、表格與格式）；需要完整版面請先另存為 .docx。
+                舊版 .doc 會直接還原版面（表格、字型、對齊、底色等）；文件內的圖片、文字方塊與自動編號項目符號目前無法還原。
             </div>
         </div>
 
@@ -449,7 +449,71 @@
         return [{ name: base + '.jpg', blob }];
     }
 
-    async function convertDocx(file, base, scale) {
+    // docx-preview 只在「明確換頁符號」處換頁，內容超出一頁時會變成一張超高的圖。
+    // 這裡依頁面可用高度，把溢出的段落／表格列搬到複製出來的新頁面。
+    function paginateOverflow(host) {
+        for (const sec of [...host.querySelectorAll('section.docx')]) {
+            const cs = getComputedStyle(sec);
+            const avail = parseFloat(cs.minHeight) - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+            const art = sec.querySelector(':scope > article');
+            if (!(avail > 100) || !art || art.offsetHeight <= avail + 2) continue;
+            const fullH = el => { const s = getComputedStyle(el); return el.getBoundingClientRect().height + (parseFloat(s.marginTop) || 0) + (parseFloat(s.marginBottom) || 0); };
+            let curSec = sec, curArt = art, used = 0;
+            const startNew = () => {
+                const ns = sec.cloneNode(false), na = art.cloneNode(false);
+                ns.appendChild(na); curSec.after(ns); curSec = ns; curArt = na; used = 0;
+            };
+            for (const k of [...art.children]) {
+                const h = fullH(k);
+                if (k.tagName === 'TABLE' && used + h > avail) {
+                    const tb0 = k.querySelector(':scope > tbody') || k;
+                    const rows = [...tb0.children].filter(x => x.tagName === 'TR');
+                    const hs = rows.map(r => r.getBoundingClientRect().height);
+                    if (used > 0 && hs.length && used + hs[0] > avail) startNew();
+                    if (k.parentNode !== curArt) curArt.appendChild(k);
+                    let curTb = tb0;
+                    rows.forEach((r, ri) => {
+                        if (used + hs[ri] > avail && used > 0) {
+                            startNew();
+                            const nt = k.cloneNode(false), cg = k.querySelector(':scope > colgroup');
+                            if (cg) nt.appendChild(cg.cloneNode(true));
+                            const ntb = tb0 === k ? nt : tb0.cloneNode(false);
+                            if (ntb !== nt) nt.appendChild(ntb);
+                            curArt.appendChild(nt); curTb = ntb;
+                        }
+                        if (r.parentNode !== curTb) curTb.appendChild(r);
+                        used += hs[ri];
+                    });
+                    continue;
+                }
+                if (used + h > avail && used > 0) startNew();
+                if (k.parentNode !== curArt) curArt.appendChild(k);
+                used += h;
+            }
+        }
+    }
+
+    // Word 的「1.15 倍行距」是相對於字型自然行高；docx-preview 卻直接用 1.15 × 字級，行會偏矮、每頁塞太多。
+    // 只用在 .doc（沒有 Word 存下的換頁標記，分頁得靠模擬）：用瀏覽器實際字型量出自然行高再乘上倍數。
+    function applyNaturalLineHeight(host) {
+        const cache = {};
+        const probe = document.createElement('span');
+        probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;line-height:normal;';
+        probe.textContent = '國Ag';
+        host.appendChild(probe);
+        for (const p of host.querySelectorAll('section.docx p')) {
+            const raw = p.style.lineHeight;
+            const m = parseFloat(raw);
+            if (!m || /[a-z%]/i.test(raw)) continue;
+            const sp = p.querySelector('span') || p, cs = getComputedStyle(sp), fs = parseFloat(cs.fontSize);
+            const key = cs.fontFamily + '|' + fs;
+            if (!(key in cache)) { probe.style.fontFamily = cs.fontFamily; probe.style.fontSize = cs.fontSize; cache[key] = probe.getBoundingClientRect().height / fs; }
+            if (cache[key] > 1) p.style.lineHeight = (m * cache[key]).toFixed(3);
+        }
+        probe.remove();
+    }
+
+    async function convertDocx(file, base, scale, opts) {
         await loadScript('lib/jszip.min.js');
         await loadScript('lib/docx-preview.min.js');
         await loadScript('lib/html2canvas.min.js');
@@ -464,6 +528,8 @@
             if (document.fonts && document.fonts.ready) await document.fonts.ready;
             const wrap = host.querySelector('.docx-wrapper');
             if (wrap) wrap.style.cssText += ';background:#fff;padding:0;';
+            if (opts && opts.naturalLineHeight) applyNaturalLineHeight(host);
+            paginateOverflow(host);
             const pages = [...host.querySelectorAll('section.docx')];
             if (!pages.length) throw new Error('文件內容是空的或無法解析');
             const out = [];
@@ -476,8 +542,8 @@
         } finally { host.remove(); }
     }
 
-    // 舊版 .doc：解析文字後以 A4 版面逐頁繪製
-    async function convertDoc(file, base, scale) {
+    // 備援：舊版 .doc 版面解析失敗時，只擷取文字並以 A4 版面逐頁繪製
+    async function convertDocTextOnly(file, base, scale) {
         await loadScript('lib/doc-extractor.js');
         const r = await window.extractDocText(await file.arrayBuffer());
         const text = (r.body || '').replace(/\r\n?/g, '\n').replace(/\u0007/g, '\t');
@@ -508,6 +574,20 @@
             out.push({ name: `${p + 1}.jpg`, blob: await canvasToJpg(cv) });
         }
         return out;
+    }
+
+    // 舊版 .doc：在瀏覽器內解析版面（表格、字型、對齊…）組成 .docx，再沿用 .docx 轉圖流程
+    async function convertDoc(file, base, scale, ui) {
+        await loadScript('lib/doc-extractor.js');
+        try {
+            const docxBytes = await window.docToDocx(await file.arrayBuffer());
+            const docxBlob = new Blob([docxBytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            return await convertDocx(docxBlob, base, scale, { naturalLineHeight: true });
+        } catch (e) {
+            console.warn('版面解析失敗，改用純文字：', e);
+            if (ui) ui.note = '⚠️ 此 .doc 的版面無法完整解析，已改為僅輸出文字內容';
+            return await convertDocTextOnly(file, base, scale);
+        }
     }
 
     // 用檔頭判斷真實格式（不單靠副檔名）
@@ -549,7 +629,7 @@
     async function downloadItem(item) {
         for (const r of item.results) { downloadBlob(r.name, r.blob); await sleep(300); }
         item.saved = true;
-        item.ui.set(`✅ 已下載 ${item.results.length} 張：${item.results.map(r => r.name).join('、')}`, 'ok');
+        item.ui.set(`✅ 已下載 ${item.results.length} 張：${item.results.map(r => r.name).join('、')}` + (item.ui.note ? '　' + item.ui.note : ''), item.ui.note ? 'warn' : 'ok');
     }
 
     // 按鈕：把目前清單內所有圖片再下載一次（例如瀏覽器攔截了自動下載時）
@@ -568,7 +648,7 @@
             let res;
             if (kind === 'heic') res = await convertHeic(file, base);
             else if (kind === 'docx') res = await convertDocx(file, base, scale);
-            else if (kind === 'doc') res = await convertDoc(file, base, scale);
+            else if (kind === 'doc') res = await convertDoc(file, base, scale, ui);
             else if (kind === 'jpeg') {
                 // iPhone 從「照片」選檔時常已先轉成 JPEG：不需再轉，原樣存檔（檔名不變，副檔名統一 .jpg）
                 res = [{ name: base + '.jpg', blob: file }];
