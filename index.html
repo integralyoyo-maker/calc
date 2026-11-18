@@ -227,8 +227,13 @@
             </div>
             <input type="file" id="jpg-file" multiple accept=".heic,.heif,.doc,.docx,image/heic,image/heif" style="display:none">
 
-            <div class="save-info" id="jpg-save-info"></div>
-            <button class="btn-secondary" id="jpg-pick-dir" onclick="pickJpgDir()">📁 選擇儲存資料夾（請選「桌面」）</button>
+            <div class="save-info" id="jpg-save-info">
+                ⬇️ 轉換完成後會<b>自動下載</b>到瀏覽器的下載位置。<br>
+                要讓檔案直接落在<b>桌面</b>，只需設定一次：<br>
+                <b>Edge</b>：設定 → 下載 → 位置，改成「桌面」，並關閉「每次下載時詢問儲存位置」<br>
+                <b>Chrome</b>：設定 → 下載 → 位置，改成「桌面」，並關閉「下載前詢問每個檔案的儲存位置」<br>
+                <span style="opacity:.7">（網頁基於瀏覽器安全限制，無法自行寫入桌面資料夾，所以改由瀏覽器的下載位置決定。）</span>
+            </div>
 
             <div class="jpg-opt">
                 <label for="jpg-scale">Word 解析度</label>
@@ -250,7 +255,7 @@
         <div class="card jpg-card" id="jpg-list-card" style="display:none;">
             <h2>轉換結果</h2>
             <div id="jpg-list"></div>
-            <button id="jpg-save-all" class="btn-secondary" style="display:none;" onclick="saveAllPendingJpg()">💾 儲存尚未存檔的圖片</button>
+            <button id="jpg-save-all" class="btn-secondary" style="display:none;" onclick="downloadAllJpg()">⬇️ 下載至桌面</button>
         </div>
     </div>
 
@@ -412,8 +417,7 @@
     // ======================================================================
     // 🖼️ 轉jpg：HEIF / DOC / DOCX → JPG（全程在瀏覽器本機處理，不上傳）
     // ======================================================================
-    const JPG = { dir: null, queue: Promise.resolve(), items: [], libs: {} };
-    const FSA = typeof window.showDirectoryPicker === 'function';
+    const JPG = { queue: Promise.resolve(), items: [], libs: {} };
 
     // ---- 依需要才載入函式庫（heic-to 約 3MB，避免拖慢其他頁面）----
     function loadScript(src) {
@@ -426,83 +430,9 @@
         });
     }
 
-    // ---- IndexedDB：記住使用者選的資料夾（只存在本機瀏覽器）----
-    function idb() {
-        return new Promise((res, rej) => {
-            const r = indexedDB.open('calc-tools', 1);
-            r.onupgradeneeded = () => r.result.createObjectStore('kv');
-            r.onsuccess = () => res(r.result);
-            r.onerror = () => rej(r.error);
-        });
-    }
-    async function idbGet(k) {
-        try { const db = await idb(); return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); } catch (e) { return null; }
-    }
-    async function idbSet(k, v) {
-        try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); } catch (e) {}
-    }
-
-    function renderSaveInfo(extra) {
-        const el = document.getElementById('jpg-save-info');
-        const btn = document.getElementById('jpg-pick-dir');
-        if (!FSA) {
-            el.innerHTML = '⚠️ 此瀏覽器無法指定資料夾，轉好的 JPG 會直接下載到瀏覽器的「下載」資料夾。<br>想存到桌面：請用電腦版 Chrome / Edge，或到瀏覽器設定把下載位置改成桌面。';
-            btn.style.display = 'none';
-        } else if (JPG.dir) {
-            el.textContent = '💾 儲存位置：' + JPG.dir.name + (extra ? '　' + extra : '');
-            btn.textContent = '📁 更換儲存資料夾';
-        } else {
-            el.textContent = '💾 尚未選擇儲存位置。請先按下方按鈕選「桌面」，之後轉換會自動存入。';
-            btn.textContent = '📁 選擇儲存資料夾（請選「桌面」）';
-        }
-    }
-
-    async function pickJpgDir() {
-        if (!FSA) return null;
-        try {
-            const h = await window.showDirectoryPicker({ id: 'calc-jpg-out', mode: 'readwrite', startIn: 'desktop' });
-            JPG.dir = h; await idbSet('jpgDir', h); renderSaveInfo();
-            return h;
-        } catch (e) {
-            if (e.name !== 'AbortError') {
-                document.getElementById('jpg-save-info').textContent = '⚠️ 瀏覽器不允許選這個資料夾（' + e.name + '）。請在桌面建立一個子資料夾（例如「轉檔輸出」）再選它。';
-            }
-            return null;
-        }
-    }
-
-    // interactive=true 才會跳出授權視窗（需要使用者點擊）
-    async function ensureDir(interactive) {
-        if (!FSA) return null;
-        if (!JPG.dir) { if (!interactive) return null; await pickJpgDir(); if (!JPG.dir) return null; }
-        try {
-            let p = await JPG.dir.queryPermission({ mode: 'readwrite' });
-            if (p === 'granted') return JPG.dir;
-            if (!interactive) return null;
-            p = await JPG.dir.requestPermission({ mode: 'readwrite' });
-            return p === 'granted' ? JPG.dir : null;
-        } catch (e) { return null; }
-    }
-
     function safeName(n) { return n.replace(/[\\\/:*?"<>|]/g, '_').trim() || 'file'; }
 
-    async function uniqueName(dir, name) {
-        const dot = name.lastIndexOf('.'), base = name.slice(0, dot), ext = name.slice(dot);
-        for (let i = 0; i < 1000; i++) {
-            const n = i === 0 ? name : `${base} (${i})${ext}`;
-            try { await dir.getFileHandle(n); } catch (e) { if (e.name === 'NotFoundError') return n; throw e; }
-        }
-        return `${base}_${Date.now()}${ext}`;
-    }
-
-    async function writeToDir(dir, name, blob) {
-        const finalName = await uniqueName(dir, name);
-        const fh = await dir.getFileHandle(finalName, { create: true });
-        const w = await fh.createWritable();
-        await w.write(blob); await w.close();
-        return finalName;
-    }
-
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
     function downloadBlob(name, blob) {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob); a.download = name;
@@ -609,41 +539,22 @@
     }
 
     function refreshSaveAllBtn() {
-        const pending = JPG.items.filter(i => !i.saved).length;
+        const total = JPG.items.reduce((n, i) => n + i.results.length, 0);
         const b = document.getElementById('jpg-save-all');
-        b.style.display = pending ? '' : 'none';
-        b.textContent = `💾 儲存尚未存檔的圖片（${pending}）`;
+        b.style.display = total ? '' : 'none';
+        b.textContent = `⬇️ 下載至桌面（${total} 張）`;
     }
 
-    // 儲存一批結果；回傳 true 代表全部存好
-    async function saveResults(item, interactive) {
-        const targets = item.results.filter(r => !r.saved);
-        if (!targets.length) return true;
-        if (!FSA) {
-            targets.forEach(r => { downloadBlob(r.name, r.blob); r.saved = true; });
-            item.saved = true; item.ui.set(`✅ 完成，共 ${item.results.length} 張，已下載到瀏覽器下載資料夾`, 'ok');
-            return true;
-        }
-        const dir = await ensureDir(interactive);
-        if (!dir) { item.ui.set(`⚠️ 已轉好 ${item.results.length} 張，但尚未取得資料夾權限，請按下方「儲存」`, 'warn'); return false; }
-        try {
-            const names = [];
-            for (const r of targets) { names.push(await writeToDir(dir, r.name, r.blob)); r.saved = true; }
-            item.saved = true;
-            item.ui.set(`✅ 已存到「${dir.name}」：${names.join('、')}`, 'ok');
-            return true;
-        } catch (e) {
-            item.ui.set('❌ 存檔失敗：' + (e.message || e.name), 'err');
-            return false;
-        }
+    // 下載一個檔案的所有圖片（逐張間隔 300ms，避免被瀏覽器當成大量下載而攔截）
+    async function downloadItem(item) {
+        for (const r of item.results) { downloadBlob(r.name, r.blob); await sleep(300); }
+        item.saved = true;
+        item.ui.set(`✅ 已下載 ${item.results.length} 張：${item.results.map(r => r.name).join('、')}`, 'ok');
     }
 
-    async function saveAllPendingJpg() {
-        // 這裡由使用者點擊觸發，可以跳出授權視窗
-        const first = JPG.items.find(i => !i.saved);
-        if (FSA && first && !(await ensureDir(true))) { renderSaveInfo(); return; }
-        for (const it of JPG.items.filter(i => !i.saved)) await saveResults(it, true);
-        refreshSaveAllBtn();
+    // 按鈕：把目前清單內所有圖片再下載一次（例如瀏覽器攔截了自動下載時）
+    async function downloadAllJpg() {
+        for (const it of JPG.items) await downloadItem(it);
     }
 
     async function processJpgFile(file) {
@@ -661,13 +572,13 @@
             else if (kind === 'jpeg') {
                 // iPhone 從「照片」選檔時常已先轉成 JPEG：不需再轉，原樣存檔（檔名不變，副檔名統一 .jpg）
                 res = [{ name: base + '.jpg', blob: file }];
-                ui.set('ℹ️ 此檔本身已是 JPEG（iPhone 選取時自動轉換），直接存檔…');
+                ui.set('ℹ️ 此檔本身已是 JPEG（iPhone 選取時自動轉換），直接下載…');
             }
             else throw new Error('不支援的格式（僅支援 .heic .heif .doc .docx）');
             item.results = res.map(r => ({ ...r, url: URL.createObjectURL(r.blob), saved: false }));
             ui.thumbs(item.results);
             JPG.items.push(item);
-            await saveResults(item, false);
+            await downloadItem(item);
         } catch (e) {
             console.error(e);
             ui.set('❌ ' + (e.message || '轉換失敗'), 'err');
@@ -691,8 +602,6 @@
         ['dragenter', 'dragover'].forEach(ev => page.addEventListener(ev, () => drop.classList.add('dragover')));
         ['dragleave', 'drop'].forEach(ev => page.addEventListener(ev, e => { if (ev === 'drop' || e.target === page) drop.classList.remove('dragover'); }));
         page.addEventListener('drop', e => { drop.classList.remove('dragover'); handleJpgFiles(e.dataTransfer.files); });
-        renderSaveInfo();
-        if (FSA) idbGet('jpgDir').then(h => { if (h) { JPG.dir = h; renderSaveInfo(); } });
     })();
 
     updateDates();
