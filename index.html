@@ -225,7 +225,7 @@
                 <div><b>把 .heic / .heif / .doc / .docx / .pdf 拖曳到這裡</b></div>
                 <div class="dz-sub">或點一下選擇檔案（可一次多個）</div>
             </div>
-            <input type="file" id="jpg-file" multiple accept=".heic,.heif,.doc,.docx,.pdf,.rtf,.htm,.html,.mht,image/heic,image/heif,application/pdf" style="display:none">
+            <input type="file" id="jpg-file" multiple accept=".heic,.heif,.doc,.docx,.pdf,.rtf,.htm,.html,.mht,.xml,image/heic,image/heif,application/pdf" style="display:none">
 
             <div class="save-info" id="jpg-save-info">
                 ⬇️ 轉換完成後會<b>自動下載</b>到瀏覽器的下載位置。<br>
@@ -580,9 +580,14 @@
     async function convertDoc(file, base, scale, ui) {
         await loadScript('lib/doc-extractor.js');
         try {
-            const docxBytes = await window.docToDocx(await file.arrayBuffer());
-            const docxBlob = new Blob([docxBytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-            return await convertDocx(docxBlob, base, scale, { naturalLineHeight: true });
+            await loadScript('lib/wmf.min.js');      // WMF / EMF 向量圖轉 PNG 用
+            await loadScript('lib/emf.min.js');
+            await loadScript('lib/meta2png.js');
+            const r = await window.docToDocx(await file.arrayBuffer(), { metaToPng: window.metaToPng });
+            const docxBlob = new Blob([r.docx], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            const res = await convertDocx(docxBlob, base, scale, { naturalLineHeight: true });
+            if (ui && r.info && r.info.skippedPics) ui.note = `⚠️ 有 ${r.info.skippedPics} 張圖片格式不支援（或已損毀），該位置未顯示`;
+            return res;
         } catch (e) {
             console.warn('版面解析失敗，改用純文字：', e);
             try {
@@ -633,7 +638,16 @@
     // 副檔名是 .doc 但實際為 RTF / HTML / MHT / 純文字：在隔離的 iframe 內渲染後分頁輸出
     async function convertLegacyText(file, kind, scale, ui) {
         const label = { rtf: 'RTF', html: 'HTML 網頁', mht: 'MHT 單一網頁', text: '純文字' }[kind];
-        if (kind === 'wordxml') throw new Error('此檔案是 Word 2003 XML 格式，目前無法轉換；請用 Word 開啟後另存為 .docx 或 PDF');
+        if (kind === 'wordxml') {
+            await loadScript('lib/jszip.min.js');
+            await loadScript('lib/wordxml.js');
+            const r = await window.WordXml.toDocx(new Uint8Array(await file.arrayBuffer()));
+            const docxBlob = new Blob([r.docx], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            const res = await convertDocx(docxBlob, file.name.replace(/\.[^.]+$/, ''), scale);
+            ui.info = 'ℹ️ 此檔案是 Word 2003 XML 格式';
+            if (r.info && r.info.skippedPics) ui.note = `⚠️ 有 ${r.info.skippedPics} 個圖形無法轉換（僅支援內嵌的點陣圖片）`;
+            return res;
+        }
         await loadScript('lib/html2canvas.min.js');
         await loadScript('lib/legacy-doc.js');
         const u8 = new Uint8Array(await file.arrayBuffer());
@@ -718,7 +732,7 @@
             }
             else if (kind === 'pdf') res = await convertPdf(file, scale, ui);
             else if (['rtf', 'html', 'mht', 'text', 'wordxml'].includes(kind)) res = await convertLegacyText(file, kind, scale, ui);
-            else throw new Error('不支援的格式（支援：HEIC/HEIF、Word .doc/.docx、PDF、RTF、HTML）');
+            else throw new Error('不支援的格式（支援：HEIC/HEIF、Word .doc/.docx、PDF、Word 2003 XML、RTF、HTML）');
             item.results = res.map(r => ({ ...r, url: URL.createObjectURL(r.blob), saved: false }));
             ui.thumbs(item.results);
             JPG.items.push(item);
