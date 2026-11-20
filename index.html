@@ -532,6 +532,8 @@
             paginateOverflow(host);
             const pages = [...host.querySelectorAll('section.docx')];
             if (!pages.length) throw new Error('文件內容是空的或無法解析');
+            // 去掉結尾的空白頁（例如分節符號所在的空段落溢出到新的一頁）
+            while (pages.length > 1 && !pages[pages.length - 1].textContent.trim() && !pages[pages.length - 1].querySelector('img,svg,canvas,table')) pages.pop();
             const out = [];
             for (let i = 0; i < pages.length; i++) {
                 pages[i].style.boxShadow = 'none'; pages[i].style.margin = '0';
