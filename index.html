@@ -532,6 +532,11 @@
             paginateOverflow(host);
             const pages = [...host.querySelectorAll('section.docx')];
             if (!pages.length) throw new Error('文件內容是空的或無法解析');
+            // Word 2003 XML 的「分散對齊」：以字元樣式 LS<twips> 標記，這裡補上字距（docx-preview 本身不支援）
+            host.querySelectorAll('span').forEach(el => {
+                const m = /(?:^|\s)docx_LS(\d+)(?:\s|$)/i.exec(el.className || '');
+                if (m) el.style.letterSpacing = (m[1] / 20) + 'pt';
+            });
             // 去掉結尾的空白頁（例如分節符號所在的空段落溢出到新的一頁）
             while (pages.length > 1 && !pages[pages.length - 1].textContent.trim() && !pages[pages.length - 1].querySelector('img,svg,canvas,table')) pages.pop();
             const out = [];
