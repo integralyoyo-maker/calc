@@ -78,8 +78,8 @@
         .jpg-state.warn { color: #ffab40; opacity: 1; }
 
         /* 🚦 違規入案代碼表 */
-        #codes { --cd-ac:#2ec4b6; --cd-ac-bg:rgba(46,196,182,.14); --cd-money:#ffc857; --cd-must:#ff7a7a; --cd-must-bg:rgba(255,122,122,.15); --cd-mail:#6fdc8c; --cd-mail-bg:rgba(111,220,140,.14); --cd-owner:#b8a1ff; --cd-driver:#2ec4b6; --cd-mut:#9aa3ad; padding:14px 12px 96px; }
-        [data-theme="light"] #codes { --cd-ac:#0b7f75; --cd-ac-bg:rgba(11,127,117,.10); --cd-money:#a35a00; --cd-must:#c0262d; --cd-must-bg:rgba(192,38,45,.09); --cd-mail:#1d7a3a; --cd-mail-bg:rgba(29,122,58,.09); --cd-owner:#6b4fd8; --cd-driver:#0b7f75; --cd-mut:#6b7280; }
+        #codes { --cd-ac:#aebccb; --cd-ac-bg:rgba(174,188,203,.14); --cd-money:#ffd43b; --cd-must:#ff8787; --cd-must-bg:rgba(255,135,135,.15); --cd-mail:#69db7c; --cd-mail-bg:rgba(105,219,124,.14); --cd-owner:#ff7eb6; --cd-driver:#aebccb; --cd-mut:#9aa3ad; padding:14px 12px 96px; }
+        [data-theme="light"] #codes { --cd-ac:#44566b; --cd-ac-bg:rgba(68,86,107,.10); --cd-money:#8a6a00; --cd-must:#c0262d; --cd-must-bg:rgba(192,38,45,.09); --cd-mail:#1d7a3a; --cd-mail-bg:rgba(29,122,58,.09); --cd-owner:#b8326f; --cd-driver:#44566b; --cd-mut:#6b7280; }
         #codes .cd-wrap { width:100%; max-width:720px; }
         #codes .cd-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
         #codes .cd-title { font-size:20px; font-weight:800; margin:0; color:var(--text-color); border:0; padding:0; letter-spacing:.5px; }
@@ -114,7 +114,7 @@
         #codes .cd-detail .k { color:var(--cd-mut); }
         #codes .cd-empty { text-align:center; padding:40px 10px; color:var(--cd-mut); line-height:1.8; }
         #codes .cd-loadmore { width:100%; background:transparent; color:var(--cd-ac); border:1px solid var(--cd-ac); margin:6px 0 0; }
-        #codes .cd-fab { position:fixed; right:16px; bottom:18px; z-index:90; width:auto; margin:0; padding:13px 20px; border-radius:999px; background:var(--cd-ac); color:#04201d; font-size:16px; box-shadow:0 6px 18px rgba(0,0,0,.4); display:flex; gap:6px; align-items:center; }
+        #codes .cd-fab { position:fixed; right:16px; bottom:18px; z-index:90; width:auto; margin:0; padding:13px 20px; border-radius:999px; background:var(--cd-ac); color:#111; font-size:16px; box-shadow:0 6px 18px rgba(0,0,0,.4); display:flex; gap:6px; align-items:center; }
         [data-theme="light"] #codes .cd-fab { color:#fff; }
         #codes .cd-mask { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:900; display:none; }
         #codes .cd-mask.on { display:block; }
@@ -126,7 +126,7 @@
         #codes .cd-x { width:auto; margin:0; padding:4px 12px; font-size:20px; background:transparent; color:var(--text-color); }
         #codes .cd-srow { display:flex; gap:8px; }
         #codes .cd-srow input { flex:1; min-width:0; }
-        #codes .cd-srow button { width:auto; margin:0; padding:0 18px; background:var(--cd-ac); color:#04201d; }
+        #codes .cd-srow button { width:auto; margin:0; padding:0 18px; background:var(--cd-ac); color:#111; }
         [data-theme="light"] #codes .cd-srow button { color:#fff; }
         #codes .cd-hint { font-size:12px; color:var(--cd-mut); margin:6px 2px 14px; line-height:1.6; }
         #codes .cd-lg h4 { margin:14px 0 8px; font-size:14px; color:var(--cd-money); }
@@ -866,7 +866,7 @@
     // ========== 🚦 違規入案代碼表 ==========
     const CD = { rows: null, old: null, meta: null, all: [], view: [], shown: 0, q: '', mail: 'all', incOld: false, loading: false, io: null };
     const CD_TARGET = { '0': '駕駛人', 'V': '車主', '%': '車輛所有人', '+': '轉歸責駕駛人' };
-    const CD_HICON = { '1': '⛔', '2': '📡', '3': '🔊', '4': '🔧', '5': '🔧', '6': '📘', '7': '🪪', '8': '🏷️', '9': '⏳', 'a': '⏳', 'b': '🎯', 'c': '📄', 'd': '📄', 'e': '📄', 'f': '🚧', 'g': '📢', 'h': '📘' };
+    const CD_HICON = { '1': '❌', '2': '📡', '3': '🔇', '4': '🔧', '5': '🔧', '6': '📘', '7': '🪪', '8': '🏷️', '9': '⏳', 'a': '⏳', 'b': '🎯', 'c': '📄', 'd': '📄', 'e': '📄', 'f': '🔐', 'g': '📢', 'h': '📘' };
     const cdEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const cdNorm = s => String(s).normalize('NFKC').toLowerCase().replace(/臺/g, '台');
     const cdMoney = n => '$' + Number(n).toLocaleString('en-US');
