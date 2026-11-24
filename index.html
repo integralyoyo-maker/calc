@@ -76,6 +76,63 @@
         .jpg-state.ok { color: #34C759; opacity: 1; }
         .jpg-state.err { color: #ff5252; opacity: 1; }
         .jpg-state.warn { color: #ffab40; opacity: 1; }
+
+        /* 🚦 違規入案代碼表 */
+        #codes { --cd-ac:#2ec4b6; --cd-ac-bg:rgba(46,196,182,.14); --cd-money:#ffc857; --cd-must:#ff7a7a; --cd-must-bg:rgba(255,122,122,.15); --cd-mail:#6fdc8c; --cd-mail-bg:rgba(111,220,140,.14); --cd-owner:#b8a1ff; --cd-driver:#2ec4b6; --cd-mut:#9aa3ad; padding:14px 12px 96px; }
+        [data-theme="light"] #codes { --cd-ac:#0b7f75; --cd-ac-bg:rgba(11,127,117,.10); --cd-money:#a35a00; --cd-must:#c0262d; --cd-must-bg:rgba(192,38,45,.09); --cd-mail:#1d7a3a; --cd-mail-bg:rgba(29,122,58,.09); --cd-owner:#6b4fd8; --cd-driver:#0b7f75; --cd-mut:#6b7280; }
+        #codes .cd-wrap { width:100%; max-width:720px; }
+        #codes .cd-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+        #codes .cd-title { font-size:20px; font-weight:800; margin:0; color:var(--text-color); border:0; padding:0; letter-spacing:.5px; }
+        #codes .cd-ver { font-size:13px; font-weight:700; padding:4px 10px; border-radius:999px; background:var(--cd-ac-bg); color:var(--cd-ac); border:1px solid var(--cd-ac); }
+        #codes .cd-warn { font-size:13px; line-height:1.65; padding:10px 12px; border-radius:10px; background:var(--card-bg); border:1px dashed var(--cd-money); color:var(--text-color); margin-bottom:12px; }
+        #codes .cd-warn b { color:var(--cd-money); }
+        #codes .cd-bar { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; font-size:13px; color:var(--cd-mut); margin:4px 2px 10px; }
+        #codes .cd-chip { width:auto; margin:0; padding:6px 12px; font-size:13px; font-weight:700; border-radius:999px; background:transparent; color:var(--text-color); border:1px solid var(--border-color); }
+        #codes .cd-chip.on { background:var(--cd-ac-bg); color:var(--cd-ac); border-color:var(--cd-ac); }
+        #codes .cd-chips { display:flex; gap:6px; flex-wrap:wrap; }
+        #codes .cd-card { position:relative; background:var(--card-bg); border-radius:14px; padding:12px 14px 12px 16px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,.18); cursor:pointer; overflow:hidden; border:1px solid var(--border-color); }
+        #codes .cd-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--cd-driver); }
+        #codes .cd-card.t-owner::before { background:var(--cd-owner); }
+        #codes .cd-card.old { opacity:.6; }
+        #codes .cd-top { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+        #codes .cd-code { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:17px; font-weight:800; letter-spacing:1px; color:var(--cd-ac); }
+        #codes .cd-bg { display:flex; gap:5px; flex-wrap:wrap; }
+        #codes .cd-b { font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px; background:var(--input-bg); color:var(--text-color); border:1px solid var(--border-color); white-space:nowrap; }
+        #codes .cd-b.must { background:var(--cd-must-bg); color:var(--cd-must); border-color:var(--cd-must); }
+        #codes .cd-b.mail { background:var(--cd-mail-bg); color:var(--cd-mail); border-color:var(--cd-mail); }
+        #codes .cd-b.old { background:transparent; color:var(--cd-mut); border-style:dashed; }
+        #codes .cd-text { font-size:15px; line-height:1.55; margin:7px 0 6px; word-break:break-word; }
+        #codes .cd-hd { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:6px; }
+        #codes .cd-h { font-size:12px; padding:2px 8px; border-radius:6px; background:var(--cd-ac-bg); color:var(--cd-ac); }
+        #codes .cd-foot { display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+        #codes .cd-fine b { font-size:20px; color:var(--cd-money); font-variant-numeric:tabular-nums; }
+        #codes .cd-fine small { font-size:12px; color:var(--cd-mut); margin-left:4px; }
+        #codes .cd-pt { font-size:13px; font-weight:800; color:var(--cd-must); }
+        #codes .cd-more { font-size:12px; color:var(--cd-mut); }
+        #codes .cd-detail { display:none; margin-top:9px; padding-top:9px; border-top:1px dashed var(--border-color); font-size:13px; line-height:1.8; }
+        #codes .cd-card.open .cd-detail { display:block; }
+        #codes .cd-detail .k { color:var(--cd-mut); }
+        #codes .cd-empty { text-align:center; padding:40px 10px; color:var(--cd-mut); line-height:1.8; }
+        #codes .cd-loadmore { width:100%; background:transparent; color:var(--cd-ac); border:1px solid var(--cd-ac); margin:6px 0 0; }
+        #codes .cd-fab { position:fixed; right:16px; bottom:18px; z-index:90; width:auto; margin:0; padding:13px 20px; border-radius:999px; background:var(--cd-ac); color:#04201d; font-size:16px; box-shadow:0 6px 18px rgba(0,0,0,.4); display:flex; gap:6px; align-items:center; }
+        [data-theme="light"] #codes .cd-fab { color:#fff; }
+        #codes .cd-mask { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:900; display:none; }
+        #codes .cd-mask.on { display:block; }
+        #codes .cd-drawer { position:fixed; left:0; right:0; bottom:0; max-height:86vh; overflow:auto; z-index:901; background:var(--card-bg); border-radius:20px 20px 0 0; padding:16px 16px 26px; box-shadow:0 -8px 30px rgba(0,0,0,.5); transform:translateY(105%); transition:transform .28s; box-sizing:border-box; visibility:hidden; }
+        #codes .cd-drawer.on { transform:none; visibility:visible; }
+        @media (min-width:820px) { #codes .cd-drawer { left:auto; top:0; width:400px; max-height:none; border-radius:20px 0 0 20px; transform:translateX(105%); } #codes .cd-drawer.on { transform:none; } }
+        #codes .cd-dh { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+        #codes .cd-dh h3 { margin:0; font-size:17px; color:var(--cd-ac); }
+        #codes .cd-x { width:auto; margin:0; padding:4px 12px; font-size:20px; background:transparent; color:var(--text-color); }
+        #codes .cd-srow { display:flex; gap:8px; }
+        #codes .cd-srow input { flex:1; min-width:0; }
+        #codes .cd-srow button { width:auto; margin:0; padding:0 18px; background:var(--cd-ac); color:#04201d; }
+        [data-theme="light"] #codes .cd-srow button { color:#fff; }
+        #codes .cd-hint { font-size:12px; color:var(--cd-mut); margin:6px 2px 14px; line-height:1.6; }
+        #codes .cd-lg h4 { margin:14px 0 8px; font-size:14px; color:var(--cd-money); }
+        #codes .cd-li { display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--border-color); font-size:13px; line-height:1.6; }
+        #codes .cd-li .s { flex:0 0 112px; }
+        #codes .cd-li:last-child { border-bottom:0; }
     </style>
 </head>
 <body data-theme="dark">
@@ -93,6 +150,7 @@
         <div class="sidebar-item" onclick="showPage('skid')">🚗 車速換算 (煞車痕)</div>
         <div class="sidebar-item" onclick="showPage('overload')">🚚 超載計算器</div>
         <div class="sidebar-item" onclick="showPage('tojpg')">🖼️ 轉jpg (HEIF / Word / PDF)</div>
+        <div class="sidebar-item" onclick="showPage('codes')">🚦 違規入案代碼表</div>
     </div>
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
@@ -259,6 +317,39 @@
         </div>
     </div>
 
+    <!-- 🚦 違規入案代碼表 -->
+    <div id="codes" class="page">
+        <div class="cd-wrap">
+            <div class="cd-head">
+                <h2 class="cd-title">🚦 違規代碼一覽</h2>
+                <span class="cd-ver" id="cd-ver">載入中…</span>
+            </div>
+            <div class="cd-warn">⚠️ 本代碼表為 <b>AI 協助整理</b>自警政署違規入案代碼表檔案，<b>僅供參考</b>；實際認定請以<b>處罰機關</b>資料為準。</div>
+            <div class="cd-bar">
+                <span id="cd-count">—</span>
+                <div class="cd-chips">
+                    <button class="cd-chip on" data-m="all" onclick="codesSetMail('all',this)">全部</button>
+                    <button class="cd-chip" data-m="must" onclick="codesSetMail('must',this)">應到案</button>
+                    <button class="cd-chip" data-m="mail" onclick="codesSetMail('mail',this)">得郵繳</button>
+                    <button class="cd-chip" id="cd-old" onclick="codesToggleOld(this)">含已不適用</button>
+                </div>
+            </div>
+            <div id="cd-list"></div>
+        </div>
+
+        <button class="cd-fab" onclick="codesDrawer(true)">🔎 搜尋</button>
+        <div class="cd-mask" id="cd-mask" onclick="codesDrawer(false)"></div>
+        <div class="cd-drawer" id="cd-drawer">
+            <div class="cd-dh"><h3>🔎 搜尋與圖例</h3><button class="cd-x" onclick="codesDrawer(false)" aria-label="關閉">✕</button></div>
+            <div class="cd-srow">
+                <input id="cd-q" type="search" placeholder="輸入代碼或違規文字" autocomplete="off" enterkeyhint="search">
+                <button onclick="codesSearch()">搜尋</button>
+            </div>
+            <div class="cd-hint">可輸入多個關鍵字（以空白分隔，需同時符合），例如：<b>酒駕 機車</b>、<b>1210</b>、<b>未戴安全帽</b>。代碼可只輸入前幾碼。</div>
+            <div class="cd-lg" id="cd-legend"></div>
+        </div>
+    </div>
+
 <script>
     // 側邊選單手勢滑動邏輯
     let touchStartX = 0;
@@ -289,6 +380,7 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(pId).classList.add('active');
         toggleMenu(false);
+        if (pId === 'codes') codesInit();
     }
 
     function toggleTheme() {
@@ -770,6 +862,165 @@
     })();
 
     updateDates();
+
+    // ========== 🚦 違規入案代碼表 ==========
+    const CD = { rows: null, old: null, meta: null, all: [], view: [], shown: 0, q: '', mail: 'all', incOld: false, loading: false, io: null };
+    const CD_TARGET = { '0': '駕駛人', 'V': '車主', '%': '車輛所有人', '+': '轉歸責駕駛人' };
+    const CD_HICON = { '1': '⛔', '2': '📡', '3': '🔊', '4': '🔧', '5': '🔧', '6': '📘', '7': '🪪', '8': '🏷️', '9': '⏳', 'a': '⏳', 'b': '🎯', 'c': '📄', 'd': '📄', 'e': '📄', 'f': '🚧', 'g': '📢', 'h': '📘' };
+    const cdEsc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const cdNorm = s => String(s).normalize('NFKC').toLowerCase().replace(/臺/g, '台');
+    const cdMoney = n => '$' + Number(n).toLocaleString('en-US');
+
+    function cdMonths(k) { const m = CD.meta.months && CD.meta.months[k]; return m ? m + ' 個月' : null; }
+    function cdSusp(k) {
+        if (!k) return '';
+        const fix = { '2': '吊銷', '3': '註銷', '4': '逕行註銷', '9': '永久', '*': '吊扣至檢驗合格發還', '@': '逾檢逕行註銷', '%': '68條記五點' };
+        if (fix[k]) return fix[k];
+        const m = cdMonths(k); return m ? '吊扣 ' + m : '代碼 ' + k;
+    }
+    function cdBan(k) {
+        if (!k) return '';
+        if (k === '9') return '永久'; if (/^[1-5]$/.test(k)) return k + ' 年';
+        const m = cdMonths(k); return m ? m : '代碼 ' + k;
+    }
+    function cdVeh(v) { return (CD.meta.vehicle && CD.meta.vehicle[v]) || ('車種代碼 ' + v); }
+
+    async function codesInit() {
+        if (CD.rows || CD.loading) return;
+        CD.loading = true;
+        const list = document.getElementById('cd-list');
+        list.innerHTML = '<div class="cd-empty">資料載入中…</div>';
+        try {
+            const r = await fetch('data/violation_codes.json', { cache: 'no-cache' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const d = await r.json();
+            CD.meta = d.meta; CD.rows = d.rows;
+            CD.rows.forEach(x => cdPrep(x, false));
+            document.getElementById('cd-ver').textContent = '代碼表版本 ' + (d.meta.version || '—');
+            document.getElementById('cd-ver').title = d.meta.fileDate ? '檔案日期 ' + d.meta.fileDate : '';
+            cdLegend();
+            codesApply();
+        } catch (e) {
+            list.innerHTML = '<div class="cd-empty">⚠️ 代碼資料載入失敗（' + cdEsc(e.message) + '）<br>請確認網路連線，並以網址（https://）方式開啟本頁，直接開啟本機檔案時瀏覽器會禁止讀取資料。</div>';
+            document.getElementById('cd-ver').textContent = '載入失敗';
+        }
+        CD.loading = false;
+    }
+    function cdPrep(x, isOld) {
+        x._old = isOld;
+        x._s = cdNorm(x.c + ' ' + x.t + ' ' + cdVeh(x.v) + ' ' + x.h.map(k => CD.meta.handling[k] || '').join(' '));
+    }
+    async function codesToggleOld(btn) {
+        if (!CD.rows) return;
+        if (!CD.incOld && !CD.old) {
+            btn.textContent = '載入中…';
+            try {
+                const r = await fetch('data/violation_codes_old.json', { cache: 'no-cache' });
+                CD.old = (await r.json()).rows; CD.old.forEach(x => cdPrep(x, true));
+            } catch (e) { btn.textContent = '含已不適用'; alert('已不適用代碼載入失敗'); return; }
+            btn.textContent = '含已不適用';
+        }
+        CD.incOld = !CD.incOld; btn.classList.toggle('on', CD.incOld);
+        codesApply();
+    }
+    function codesSetMail(m, btn) {
+        CD.mail = m;
+        document.querySelectorAll('#codes .cd-chip[data-m]').forEach(b => b.classList.toggle('on', b === btn));
+        codesApply();
+    }
+    function codesSearch() {
+        CD.q = document.getElementById('cd-q').value;
+        codesApply(); codesDrawer(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function codesApply() {
+        if (!CD.rows) return;
+        const terms = cdNorm(CD.q).split(/\s+/).filter(Boolean);
+        let src = CD.incOld && CD.old ? CD.rows.concat(CD.old) : CD.rows;
+        CD.view = src.filter(x => {
+            if (CD.mail === 'must' && !x.a) return false;
+            if (CD.mail === 'mail' && x.a) return false;
+            return terms.every(t => x._s.includes(t));
+        });
+        CD.shown = 0;
+        document.getElementById('cd-list').innerHTML = '';
+        const n = CD.view.length;
+        document.getElementById('cd-count').textContent = (CD.q.trim() ? '搜尋「' + CD.q.trim() + '」：' : '共 ') + n.toLocaleString() + ' 筆' + (CD.incOld ? '（含已不適用）' : '');
+        if (!n) { document.getElementById('cd-list').innerHTML = '<div class="cd-empty">🔍 找不到符合的代碼<br>試試較短的關鍵字，或只輸入代碼前幾碼</div>'; return; }
+        codesMore();
+    }
+    function codesMore() {
+        const list = document.getElementById('cd-list');
+        const old = list.querySelector('.cd-loadmore'); if (old) old.remove();
+        const end = Math.min(CD.shown + 50, CD.view.length);
+        let h = '';
+        for (let i = CD.shown; i < end; i++) h += cdCard(CD.view[i]);
+        list.insertAdjacentHTML('beforeend', h);
+        CD.shown = end;
+        if (end < CD.view.length) {
+            list.insertAdjacentHTML('beforeend', '<button class="cd-loadmore" onclick="codesMore()">顯示更多（還有 ' + (CD.view.length - end).toLocaleString() + ' 筆）</button>');
+            const btn = list.querySelector('.cd-loadmore');
+            if ('IntersectionObserver' in window) {
+                if (CD.io) CD.io.disconnect();
+                CD.io = new IntersectionObserver(es => { if (es[0].isIntersecting) { CD.io.disconnect(); codesMore(); } }, { rootMargin: '600px' });
+                CD.io.observe(btn);
+            }
+        }
+    }
+    function cdCard(x) {
+        const owner = x.o !== '0';
+        const hd = x.h.filter(k => CD.meta.handling[k] && k !== '0').map(k => '<span class="cd-h">' + (CD_HICON[k] || '▪') + ' ' + cdEsc(CD.meta.handling[k]) + '</span>').join('');
+        const f0 = x.f[0];
+        const tgt = CD_TARGET[x.o] || ('對象代碼 ' + x.o);
+        const fine = f0 > 0 ? '<b>' + cdMoney(f0) + '</b><small>（' + tgt + '）</small>' : '<b style="font-size:15px">無罰鍰</b><small>（' + tgt + '）</small>';
+        const pt = x.p > 0 ? '<span class="cd-pt">記 ' + x.p + ' 點</span>' : '';
+        const susp = cdSusp(x.s), ban = cdBan(x.k);
+        const det = [];
+        if (f0 > 0) det.push('<div><span class="k">罰鍰（期限內／逾30日內／逾30–60日／逾60日）：</span>' + x.f.map(cdMoney).join(' ／ ') + '</div>');
+        if (susp) det.push('<div><span class="k">吊扣吊銷：</span>' + cdEsc(susp) + '</div>');
+        if (ban) det.push('<div><span class="k">禁考：</span>' + cdEsc(ban) + '</div>');
+        if (x.n) det.push('<div><span class="k">代碼表備註：</span>' + cdEsc(x.n) + '</div>');
+        det.push('<div><span class="k">歸責對象：</span>' + cdEsc(tgt) + '　<span class="k">車種：</span>' + cdEsc(cdVeh(x.v)) + '</div>');
+        const extra = [susp && ('🔻' + susp), ban && ('🚫 禁考' + ban)].filter(Boolean).map(t => '<span class="cd-h">' + cdEsc(t) + '</span>').join('');
+        return '<article class="cd-card ' + (owner ? 't-owner' : '') + (x._old ? ' old' : '') + '" onclick="this.classList.toggle(\'open\')">' +
+            '<div class="cd-top"><span class="cd-code">' + cdEsc(x.c) + '</span><span class="cd-bg">' +
+            (x._old ? '<span class="cd-b old">已不適用</span>' : '') +
+            '<span class="cd-b">' + cdEsc(cdVeh(x.v)) + '</span>' +
+            (x.a ? '<span class="cd-b must">應到案</span>' : '<span class="cd-b mail">得郵繳</span>') +
+            '</span></div>' +
+            '<div class="cd-text">' + cdEsc(x.t) + '</div>' +
+            ((hd || extra) ? '<div class="cd-hd">' + hd + extra + '</div>' : '') +
+            '<div class="cd-foot"><span class="cd-fine">' + fine + '</span>' + pt + '<span class="cd-more">詳情 ▾</span></div>' +
+            '<div class="cd-detail">' + det.join('') + '</div></article>';
+    }
+    function cdLegend() {
+        const m = CD.meta;
+        const li = (s, d) => '<div class="cd-li"><div class="s">' + s + '</div><div>' + d + '</div></div>';
+        const veh = Object.keys(m.vehicle).filter(k => k !== '0').map(k => m.vehicle[k]).join('、');
+        const hd = Object.keys(m.handling).filter(k => k !== '0').map(k => '<span class="cd-h">' + (CD_HICON[k] || '▪') + ' ' + cdEsc(m.handling[k]) + '</span>').join(' ');
+        document.getElementById('cd-legend').innerHTML =
+            '<h4>📖 欄位圖例</h4>' +
+            li('<span class="cd-code" style="font-size:14px">1210103</span>', '違規入案代碼（條款代碼）。左側色條：<span style="color:var(--cd-driver)">■</span> 處罰駕駛人、<span style="color:var(--cd-owner)">■</span> 處罰車主／車輛所有人。') +
+            li('<span class="cd-b">不分車種</span>', '該代碼不分車種，罰鍰相同。') +
+            li('<span class="cd-b">小型車</span>', '該代碼依指定車種／車類而罰鍰不同（同一代碼會有多張卡片）。可選車種：' + cdEsc(veh) + '。') +
+            li('<span class="cd-b must">應到案</span>', '須到案，不得郵繳。依代碼表「不得郵繳條款」工作表自動比對。') +
+            li('<span class="cd-b mail">得郵繳</span>', '可透過網際網路、語音轉帳、郵寄或授權代收機構繳納。') +
+            li('<span class="cd-fine"><b style="font-size:16px">$1,200</b><small>（駕駛人）</small></span>', '期限內繳納或到案之最低罰鍰，及被處罰對象（駕駛人／車主／車輛所有人）。展開卡片可看逾期各階段罰鍰。') +
+            li('<span class="cd-pt">記 1 點</span>', '違規記點，依道路交通管理處罰條例第63條。') +
+            li('<span class="cd-hd" style="margin:0">' + hd + '</span>', '特殊處罰／當場處置（如移置保管、沒入、扣繳）。') +
+            li('<span class="cd-h">🔻吊扣 6 個月</span> <span class="cd-h">🚫 禁考 1 年</span>', '吊扣／吊銷（以月計或吊銷、註銷）與禁考年限。') +
+            li('<span class="cd-b old">已不適用</span>', '依代碼表備註已停用之代碼，預設隱藏；按頁面上方「含已不適用」顯示，可供查閱舊案。');
+    }
+    function codesDrawer(on) {
+        document.getElementById('cd-mask').classList.toggle('on', on);
+        document.getElementById('cd-drawer').classList.toggle('on', on);
+        if (on) setTimeout(() => document.getElementById('cd-q').focus(), 300);
+    }
+    document.addEventListener('keydown', e => {
+        if (!document.getElementById('codes').classList.contains('active')) return;
+        if (e.key === 'Escape') codesDrawer(false);
+        if (e.key === 'Enter' && e.target.id === 'cd-q') codesSearch();
+    });
 </script>
 </body>
 </html>
