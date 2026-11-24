@@ -139,7 +139,7 @@
 
     <div class="navbar">
         <div class="menu-btn" onclick="toggleMenu()">☰</div>
-        <div style="font-weight:bold; letter-spacing: 1px;">小港交通分隊</div>
+        <div style="font-weight:bold; letter-spacing: 1px; cursor:pointer;" onclick="showPage('home')" title="回到勤務首頁">滾輪小幫手</div>
         <div class="theme-toggle" onclick="toggleTheme()" id="theme-icon">☀️</div>
     </div>
 
@@ -150,7 +150,7 @@
         <div class="sidebar-item" onclick="showPage('skid')">🚗 車速換算 (煞車痕)</div>
         <div class="sidebar-item" onclick="showPage('overload')">🚚 超載計算器</div>
         <div class="sidebar-item" onclick="showPage('tojpg')">🖼️ 轉jpg (HEIF / Word / PDF)</div>
-        <div class="sidebar-item" onclick="showPage('codes')">🚦 違規入案代碼表</div>
+        <div class="sidebar-item" onclick="showPage('codes')">🚦 違規代碼表</div>
     </div>
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
@@ -345,7 +345,7 @@
                 <input id="cd-q" type="search" placeholder="輸入代碼或違規文字" autocomplete="off" enterkeyhint="search">
                 <button onclick="codesSearch()">搜尋</button>
             </div>
-            <div class="cd-hint">可輸入多個關鍵字（以空白分隔，需同時符合），例如：<b>酒駕 機車</b>、<b>1210</b>、<b>未戴安全帽</b>。代碼可只輸入前幾碼。</div>
+            <div class="cd-hint">純數字會比對<b>代碼開頭</b>（例如輸入 <b>48</b> 只找 48 開頭的代碼）；文字比對違規內容，例如 <b>酒駕</b>、<b>未戴安全帽</b>。可輸入多個關鍵字（空白分隔，需同時符合），例如 <b>酒駕 機車</b>。</div>
             <div class="cd-lg" id="cd-legend"></div>
         </div>
     </div>
@@ -940,7 +940,7 @@
         CD.view = src.filter(x => {
             if (CD.mail === 'must' && !x.a) return false;
             if (CD.mail === 'mail' && x.a) return false;
-            return terms.every(t => x._s.includes(t));
+            return terms.every(t => /^\d+$/.test(t) ? x.c.startsWith(t) : x._s.includes(t));
         });
         CD.shown = 0;
         document.getElementById('cd-list').innerHTML = '';
