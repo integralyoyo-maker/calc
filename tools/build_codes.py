@@ -138,9 +138,10 @@ for r in body:
     if st == 'future': rec['n'] = (rec.get('n', '') + '（尚未生效）')
     (old if st == 'old' else cur).append(rec)
 
-version = f'{max_date[0]}{max_date[1]:02d}{max_date[2]:02d}' if max_date[0] else ''
+note_version = f'{max_date[0]}{max_date[1]:02d}{max_date[2]:02d}' if max_date[0] else ''
+version = file_roc or note_version   # 版本＝Excel 檔名上的日期（民國）；無日期時退回備註欄最新日期
 meta = {
-    'version': version, 'fileDate': file_roc,
+    'version': version, 'noteVersion': note_version,
     'vehicle': vehicle, 'handling': handling, 'months': months,
     'counts': {'cur': len(cur), 'old': len(old)},
 }
@@ -149,4 +150,4 @@ def dump(path, obj):
     print(path, os.path.getsize(path) // 1024, 'KB')
 dump(os.path.join(out_dir, 'violation_codes.json'), {'meta': meta, 'rows': cur})
 dump(os.path.join(out_dir, 'violation_codes_old.json'), {'rows': old})
-print(meta['version'], meta['fileDate'], meta['counts'], 'rules:', len(rules), '應到案(現行):', sum(x['a'] for x in cur))
+print(meta['version'], meta['noteVersion'], meta['counts'], 'rules:', len(rules), '應到案(現行):', sum(x['a'] for x in cur))

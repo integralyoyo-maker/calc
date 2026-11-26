@@ -897,7 +897,7 @@
             CD.meta = d.meta; CD.rows = d.rows;
             CD.rows.forEach(x => cdPrep(x, false));
             document.getElementById('cd-ver').textContent = '代碼表版本 ' + (d.meta.version || '—');
-            document.getElementById('cd-ver').title = d.meta.fileDate ? '檔案日期 ' + d.meta.fileDate : '';
+            document.getElementById('cd-ver').title = d.meta.noteVersion ? '備註欄最新異動日 ' + d.meta.noteVersion : '';
             cdLegend();
             codesApply();
         } catch (e) {
