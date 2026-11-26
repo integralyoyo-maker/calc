@@ -40,6 +40,7 @@ try:
         by_name.setdefault(l.get('LawName'), []).append(l)
     index = []
     files = {}
+    att_info = {}
     for short, full in WANT:
         # 名稱可能帶「（92.09.24 訂定）」之類後綴；只取未廢止者
         c = [l for n, ls in by_name.items() if n and (n == full or n.startswith(full + '（')) for l in ls if not l.get('LawAbandonNote')]
@@ -52,12 +53,15 @@ try:
                 for a in l['LawArticles']]
         if not any(a['t'] == 'A' for a in arts):
             raise RuntimeError(f'「{full}」沒有條文')
+        att_info[pcode] = {'name': full, 'attachments': l.get('LawAttachements') or []}
         files[pcode] = {'name': full, 'short': short, 'pcode': pcode, 'url': l['LawURL'],
                         'modified': l.get('LawModifiedDate', ''), 'effective': l.get('LawEffectiveDate', ''),
                         'effectiveNote': (l.get('LawEffectiveNote') or '').replace('\r\n', '\n'),
                         'attachments': len(l.get('LawAttachements') or []), 'articles': arts}
         index.append({'short': short, 'name': full, 'pcode': pcode, 'modified': l.get('LawModifiedDate', ''),
                       'articles': sum(1 for a in arts if a['t'] == 'A')})
+    with open(os.path.join(OUT, 'attachments_info.json'), 'w', encoding='utf-8') as f:
+        json.dump(att_info, f, ensure_ascii=False, indent=1)
     # 與現有檔案比對：內容完全相同就不動（避免每天都產生提交）
     def dumps(d): return json.dumps(d, ensure_ascii=False, separators=(',', ':'))
     changed = False
