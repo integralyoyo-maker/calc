@@ -41,9 +41,10 @@ try:
     index = []
     files = {}
     for short, full in WANT:
-        c = [l for l in by_name.get(full, []) if not l.get('LawAbandonNote')]
+        # 名稱可能帶「（92.09.24 訂定）」之類後綴；只取未廢止者
+        c = [l for n, ls in by_name.items() if n and (n == full or n.startswith(full + '（')) for l in ls if not l.get('LawAbandonNote')]
         if len(c) != 1:
-            raise RuntimeError(f'找不到唯一的「{full}」（找到 {len(c)} 筆）；名稱含「道路交通」者：' + '、'.join(sorted(n for n in by_name if n and '道路交通' in n))[:600] + f'；總筆數 {len(laws)}')
+            raise RuntimeError(f'找不到唯一的「{full}」（找到 {len(c)} 筆）：' + '、'.join(f"{l.get('LawName')}[廢止註記:{(l.get('LawAbandonNote') or '無')[:20]}]" for ns in by_name.values() for l in ns if l.get('LawName', '').startswith(full))[:600])
         l = c[0]
         pcode = l['LawURL'].split('pcode=')[-1]
         arts = [{'t': a.get('ArticleType', 'A'), 'no': (a.get('ArticleNo') or '').strip(),
