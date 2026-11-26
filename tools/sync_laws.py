@@ -6,6 +6,7 @@ import io, json, os, sys, time, zipfile, urllib.request, datetime
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'laws')
 URL = 'https://law.moj.gov.tw/api/Ch/Law/JSON'
+URL_ORDER = 'https://law.moj.gov.tw/api/Ch/Order/JSON'
 WANT = [  # (短名, 法規全名)
     ('處罰條例', '道路交通管理處罰條例'),
     ('安全規則', '道路交通安全規則'),
@@ -24,14 +25,16 @@ def status(ok, msg, extra=None):
     print(('OK ' if ok else 'FAIL ') + msg)
 
 try:
-    req = urllib.request.Request(URL, headers={'User-Agent': 'Mozilla/5.0 calc-sync'})
-    raw = urllib.request.urlopen(req, timeout=120).read()
-    if raw[:2] == b'PK':
-        z = zipfile.ZipFile(io.BytesIO(raw))
-        name = next(n for n in z.namelist() if n.lower().endswith('.json'))
-        raw = z.read(name)
-    data = json.loads(raw.decode('utf-8-sig'))
-    laws = data['Laws'] if isinstance(data, dict) else data
+    def fetch(url):
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 calc-sync'})
+        raw = urllib.request.urlopen(req, timeout=180).read()
+        if raw[:2] == b'PK':
+            z = zipfile.ZipFile(io.BytesIO(raw))
+            name = next(n for n in z.namelist() if n.lower().endswith('.json'))
+            raw = z.read(name)
+        data = json.loads(raw.decode('utf-8-sig'))
+        return data['Laws'] if isinstance(data, dict) and 'Laws' in data else (data['Orders'] if isinstance(data, dict) and 'Orders' in data else data)
+    laws = fetch(URL) + fetch(URL_ORDER)   # 法律 + 命令（規則、辦法、細則屬於命令）
     by_name = {}
     for l in laws:
         by_name.setdefault(l.get('LawName'), []).append(l)
@@ -40,7 +43,7 @@ try:
     for short, full in WANT:
         c = [l for l in by_name.get(full, []) if not l.get('LawAbandonNote')]
         if len(c) != 1:
-            raise RuntimeError(f'找不到唯一的「{full}」（找到 {len(c)} 筆）')
+            raise RuntimeError(f'找不到唯一的「{full}」（找到 {len(c)} 筆）；名稱含「道路交通」者：' + '、'.join(sorted(n for n in by_name if n and '道路交通' in n))[:600] + f'；總筆數 {len(laws)}')
         l = c[0]
         pcode = l['LawURL'].split('pcode=')[-1]
         arts = [{'t': a.get('ArticleType', 'A'), 'no': (a.get('ArticleNo') or '').strip(),
