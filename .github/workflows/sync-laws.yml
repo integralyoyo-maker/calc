@@ -1,0 +1,25 @@
+name: 同步法規（全國法規資料庫）
+on:
+  schedule:
+    - cron: '0 19 * * *'      # 每日 03:00（台北時間）
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/sync_laws.py'
+      - '.github/workflows/sync-laws.yml'
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: python3 tools/sync_laws.py
+      - name: 有變動才提交
+        run: |
+          git config user.name "law-sync-bot"
+          git config user.email "law-sync-bot@users.noreply.github.com"
+          git add data/laws
+          if git diff --cached --quiet; then echo "無變動"; else git commit -m "自動同步法規資料 $(date -u +%F)" && git push; fi

@@ -133,6 +133,50 @@
         #codes .cd-li { display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--border-color); font-size:13px; line-height:1.6; }
         #codes .cd-li .s { flex:0 0 112px; }
         #codes .cd-li:last-child { border-bottom:0; }
+
+        /* 📜 法條查詢 */
+        #laws { --lw-ac:#aebccb; --lw-ac-bg:rgba(174,188,203,.14); --lw-hi:#ffd43b; --lw-hi-bg:rgba(255,212,59,.16); --lw-mut:#9aa3ad; --lw-pk:#ff7eb6; padding:14px 12px 60px; }
+        [data-theme="light"] #laws { --lw-ac:#44566b; --lw-ac-bg:rgba(68,86,107,.10); --lw-hi:#8a6a00; --lw-hi-bg:rgba(255,212,59,.35); --lw-mut:#6b7280; --lw-pk:#b8326f; }
+        #laws .lw-wrap { width:100%; max-width:720px; }
+        #laws .lw-title { font-size:20px; font-weight:800; margin:0 0 10px; color:var(--text-color); border:0; padding:0; }
+        #laws .lw-tabs { display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:8px; -webkit-overflow-scrolling:touch; }
+        #laws .lw-tab { width:auto; flex:0 0 auto; margin:0; padding:7px 13px; font-size:14px; font-weight:700; border-radius:999px; background:transparent; color:var(--text-color); border:1px solid var(--border-color); }
+        #laws .lw-tab.on { background:var(--lw-ac-bg); color:var(--lw-ac); border-color:var(--lw-ac); }
+        #laws .lw-meta { font-size:12.5px; line-height:1.7; color:var(--lw-mut); margin-bottom:10px; }
+        #laws .lw-meta a { color:var(--lw-ac); }
+        #laws .lw-note { font-size:12.5px; line-height:1.65; padding:9px 12px; border-radius:10px; background:var(--card-bg); border:1px dashed var(--lw-hi); margin-bottom:10px; white-space:pre-wrap; }
+        #laws .lw-warn { font-size:13px; line-height:1.65; padding:10px 12px; border-radius:10px; background:var(--card-bg); border:1px dashed var(--lw-hi); margin-bottom:10px; }
+        #laws .lw-sbar { position:sticky; top:58px; z-index:50; background:var(--bg-color); padding:6px 0 8px; }
+        #laws .lw-srow { display:flex; gap:8px; }
+        #laws .lw-srow input { flex:1; min-width:0; }
+        #laws .lw-srow button { width:auto; margin:0; padding:0 18px; background:var(--lw-ac); color:#111; }
+        [data-theme="light"] #laws .lw-srow button { color:#fff; }
+        #laws .lw-hint { font-size:12px; color:var(--lw-mut); margin:6px 2px 0; line-height:1.6; }
+        #laws .lw-all { display:inline-flex; align-items:center; gap:6px; font-size:13px; margin-top:6px; cursor:pointer; }
+        #laws .lw-all input { width:auto; }
+        #laws .lw-count { font-size:13px; color:var(--lw-mut); margin:6px 2px 8px; }
+        #laws .lw-chap { font-size:14px; font-weight:800; color:var(--lw-ac); margin:16px 2px 8px; padding-bottom:4px; border-bottom:1px solid var(--border-color); }
+        #laws .lw-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:14px; margin-bottom:10px; overflow:hidden; }
+        #laws .lw-ch { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:11px 14px; cursor:pointer; }
+        #laws .lw-no { font-weight:800; font-size:16px; color:var(--lw-ac); white-space:nowrap; }
+        #laws .lw-lawtag { font-size:12px; color:var(--lw-mut); }
+        #laws .lw-pv { flex:1; min-width:0; font-size:13px; color:var(--lw-mut); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        #laws .lw-body { display:none; padding:2px 14px 12px; }
+        #laws .lw-card.open .lw-body { display:block; }
+        #laws .lw-card.open .lw-pv { display:none; }
+        #laws .lw-ph { display:flex; gap:10px; }
+        #laws .lw-p { display:block; padding:8px 0; border-top:1px dashed var(--border-color); line-height:1.75; font-size:15px; }
+        #laws .lw-p:first-child { border-top:0; }
+        #laws .lw-pn { flex:0 0 auto; align-self:flex-start; font-size:12px; font-weight:800; padding:2px 8px; border-radius:6px; background:var(--lw-ac-bg); color:var(--lw-ac); margin-top:3px; white-space:nowrap; }
+        #laws .lw-pt { flex:1; min-width:0; word-break:break-word; }
+        #laws .lw-i1 { margin:3px 0 0 0; }
+        #laws .lw-i2 { margin:2px 0 0 1.3em; }
+        #laws .lw-i3 { margin:2px 0 0 2.6em; }
+        #laws .lw-p.hit { background:var(--lw-hi-bg); border-radius:8px; padding-left:8px; padding-right:8px; }
+        #laws .lw-i1.hit, #laws .lw-i2.hit { background:var(--lw-hi-bg); border-radius:6px; }
+        #laws mark { background:var(--lw-hi-bg); color:var(--lw-hi); border-radius:3px; padding:0 1px; }
+        #laws .lw-off { display:inline-block; font-size:13px; margin-top:8px; color:var(--lw-ac); }
+        #laws .lw-empty { text-align:center; padding:36px 10px; color:var(--lw-mut); line-height:1.8; }
     </style>
 </head>
 <body data-theme="dark">
@@ -151,6 +195,7 @@
         <div class="sidebar-item" onclick="showPage('overload')">🚚 超載計算器</div>
         <div class="sidebar-item" onclick="showPage('tojpg')">🖼️ 轉jpg (HEIF / Word / PDF)</div>
         <div class="sidebar-item" onclick="showPage('codes')">🚦 違規代碼表</div>
+        <div class="sidebar-item" onclick="showPage('laws')">📜 法條查詢</div>
     </div>
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
@@ -350,6 +395,26 @@
         </div>
     </div>
 
+    <!-- 📜 法條查詢 -->
+    <div id="laws" class="page">
+        <div class="lw-wrap">
+            <h2 class="lw-title">📜 法條查詢</h2>
+            <div class="lw-tabs" id="lw-tabs"></div>
+            <div class="lw-meta" id="lw-meta">載入中…</div>
+            <div id="lw-note"></div>
+            <div class="lw-sbar">
+                <div class="lw-srow">
+                    <input id="lw-q" type="search" placeholder="條號（35、35-1、35條1項）或關鍵字" autocomplete="off" enterkeyhint="search">
+                    <button onclick="lawSearch()">查詢</button>
+                </div>
+                <label class="lw-all"><input type="checkbox" id="lw-allbox" onchange="lawSearch()"> 關鍵字搜尋全部五部法規</label>
+                <div class="lw-hint">例：<b>35</b>、<b>35條1項</b>、<b>35條1項2款</b>、<b>43-1</b>、<b>安全帽</b>。項次由系統依段落自動編號。</div>
+            </div>
+            <div class="lw-count" id="lw-count"></div>
+            <div id="lw-list"></div>
+        </div>
+    </div>
+
 <script>
     // 側邊選單手勢滑動邏輯
     let touchStartX = 0;
@@ -381,6 +446,7 @@
         document.getElementById(pId).classList.add('active');
         toggleMenu(false);
         if (pId === 'codes') codesInit();
+        if (pId === 'laws') lawsInit();
     }
 
     function toggleTheme() {
@@ -1021,6 +1087,145 @@
         if (e.key === 'Escape') codesDrawer(false);
         if (e.key === 'Enter' && e.target.id === 'cd-q') codesSearch();
     });
+
+    // ========== 📜 法條查詢 ==========
+    const LW = { idx: null, cache: {}, cur: null, q: '', loading: false };
+    const LW_CN = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+    function lwCn(n) { if (n <= 10) return LW_CN[n]; if (n < 20) return '十' + LW_CN[n - 10]; if (n < 100) return LW_CN[Math.floor(n / 10)] + '十' + (n % 10 ? LW_CN[n % 10] : ''); return ''; }
+    function lwCnToNum(s) { if (/^\d+$/.test(s)) return +s; let n = 0; if (s === '十') return 10; if (s.includes('十')) { const [a, b] = s.split('十'); n = (a ? LW_CN.indexOf(a) : 1) * 10 + (b ? LW_CN.indexOf(b) : 0); return n; } return LW_CN.indexOf(s); }
+    const lwRoc = d => d && d.length === 8 ? (+d.slice(0, 4) - 1911) + '/' + d.slice(4, 6) + '/' + d.slice(6, 8) : (d || '—');
+    function lwKey(no) { return String(no).normalize('NFKC').replace(/[第條\s]/g, ''); }   // "第 35-1 條" → "35-1"
+
+    async function lawsInit() {
+        if (LW.idx || LW.loading) return;
+        LW.loading = true;
+        try {
+            const r = await fetch('data/laws/index.json', { cache: 'no-cache' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            LW.idx = await r.json();
+            document.getElementById('lw-tabs').innerHTML = LW.idx.laws.map(l => '<button class="lw-tab" data-p="' + l.pcode + '" onclick="lawPick(\'' + l.pcode + '\')">' + cdEsc(l.short) + '</button>').join('');
+            await lawPick(LW.idx.laws[0].pcode);
+        } catch (e) {
+            let why = '';
+            try { const s = await (await fetch('data/laws/status.json', { cache: 'no-cache' })).json(); why = '<br>最近一次自動同步：' + cdEsc(s.time) + ' — ' + cdEsc(s.message); } catch (_) { }
+            document.getElementById('lw-meta').innerHTML = '⚠️ 尚無法規資料（' + cdEsc(e.message) + '）。' + why + '<br>資料由 GitHub 自動從全國法規資料庫同步；若是剛建立，請稍後再試。';
+        }
+        LW.loading = false;
+    }
+    async function lawLoad(p) {
+        if (!LW.cache[p]) {
+            const r = await fetch('data/laws/' + p + '.json', { cache: 'no-cache' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const d = await r.json();
+            d.arts = d.articles.filter(a => a.t === 'A').map(a => ({ no: a.no, key: lwKey(a.no), c: a.c, paras: lwParse(a.c) }));
+            LW.cache[p] = d;
+        }
+        return LW.cache[p];
+    }
+    // 把條文拆成「項」「款」「目」：款=一、 目=（一）或1、 ；開頭有空白的行視為上一行的延續
+    function lwParse(text) {
+        const paras = []; let last = null;
+        text.split('\n').forEach(line => {
+            if (!line.trim()) return;
+            if (/^[\s\u3000]/.test(line) && last) { last.t += line.trim(); return; }
+            const t = line.trim();
+            let lv = 0;
+            if (/^[一二三四五六七八九十]+、/.test(t)) lv = 1;
+            else if (/^[（(][一二三四五六七八九十]+[）)]/.test(t) || /^\d+[、．.]/.test(t)) lv = 2;
+            else if (/^[（(]\d+[）)]/.test(t)) lv = 3;
+            if (lv === 0) { last = { n: paras.filter(x => x.lv === 0).length + 1, lv: 0, t: t }; paras.push(last); }
+            else {
+                if (!paras.length) { paras.push({ n: 1, lv: 0, t: '' }); }
+                last = { n: 0, lv: lv, t: t, par: paras.filter(x => x.lv === 0).length }; paras.push(last);
+            }
+        });
+        return paras;
+    }
+    async function lawPick(p) {
+        LW.cur = p;
+        document.querySelectorAll('#lw-tabs .lw-tab').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+        try {
+            const d = await lawLoad(p);
+            document.getElementById('lw-meta').innerHTML = cdEsc(d.name) + '｜最新修正日期 <b>' + lwRoc(d.modified) + '</b>｜共 ' + d.arts.length + ' 條｜資料取得 ' + cdEsc(LW.idx.syncedAt) +
+                '｜<a href="' + cdEsc(d.url) + '" target="_blank" rel="noopener">全國法規資料庫原文 ↗</a>' + (d.attachments ? '<br>※ 本法規另有附件（如表格）' + d.attachments + ' 項，未收錄於此，請至官網查閱。' : '');
+            document.getElementById('lw-note').innerHTML = d.effectiveNote && d.effectiveNote.trim() ? '<div class="lw-note">📌 施行注意（部分條文施行日期另定）：\n' + cdEsc(d.effectiveNote.trim().replace(/\n\s+/g, '')) + '</div>' : '';
+        } catch (e) { document.getElementById('lw-meta').textContent = '⚠️ 載入失敗：' + e.message; return; }
+        lawSearch(true);
+    }
+    function lwHl(t, terms) {
+        let h = cdEsc(t);
+        terms.forEach(k => { if (k) h = h.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/&/g, '&amp;'), 'g'), m => '<mark>' + m + '</mark>'); });
+        return h;
+    }
+    function lwArtHtml(law, a, opt) {
+        opt = opt || {};
+        const terms = opt.terms || [];
+        let body = '', pn = 0;
+        a.paras.forEach(x => {
+            if (x.lv === 0) {
+                pn = x.n;
+                const hit = opt.para && pn === opt.para && !opt.sub;
+                body += '<div class="lw-p' + (hit ? ' hit' : '') + '"><div class="lw-ph"><span class="lw-pn">' + (a.paras.filter(y => y.lv === 0).length > 1 ? '第' + pn + '項' : '本文') + '</span><div class="lw-pt">' + lwHl(x.t, terms) + '</div></div>';
+                body += '@@ITEMS' + pn + '@@</div>';
+            }
+        });
+        // 款目掛到所屬項
+        const items = {};
+        a.paras.forEach(x => { if (x.lv > 0) { (items[x.par] = items[x.par] || []).push(x); } });
+        body = body.replace(/@@ITEMS(\d+)@@/g, (m, n) => (items[n] || []).map(x => {
+            const isSub = opt.para && +n === opt.para && opt.sub && x.lv === 1 && x.t.startsWith(lwCn(opt.sub) + '、');
+            return '<div class="lw-i' + x.lv + (isSub ? ' hit' : '') + '">' + lwHl(x.t, terms) + '</div>';
+        }).join(''));
+        const flno = a.key;
+        const url = 'https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=' + law.pcode + '&flno=' + encodeURIComponent(flno);
+        const first = a.paras.length ? a.paras[0].t : '';
+        return '<article class="lw-card' + (opt.open ? ' open' : '') + '"><div class="lw-ch" onclick="this.parentNode.classList.toggle(\'open\')"><span class="lw-no">第 ' + cdEsc(a.key) + ' 條</span>' +
+            (opt.tag ? '<span class="lw-lawtag">' + cdEsc(opt.tag) + '</span>' : '') + '<span class="lw-pv">' + cdEsc(first.slice(0, 40)) + '</span></div>' +
+            '<div class="lw-body">' + body + '<a class="lw-off" target="_blank" rel="noopener" href="' + url + '">在全國法規資料庫查看第 ' + cdEsc(a.key) + ' 條 ↗</a></div></article>';
+    }
+    function lawSearch(fromPick) {
+        if (!fromPick) LW.q = document.getElementById('lw-q').value;
+        const raw = LW.q.normalize('NFKC').trim();
+        const list = document.getElementById('lw-list'), cnt = document.getElementById('lw-count');
+        const law = LW.cache[LW.cur]; if (!law) return;
+        const all = document.getElementById('lw-allbox').checked;
+        if (!raw) {   // 瀏覽：依章節
+            let h = '';
+            const chapters = {}; let cur = '';
+            law.articles.forEach(a => { if (a.t !== 'A') { cur = a.c.trim(); h += '<div class="lw-chap">' + cdEsc(cur) + '</div>'; } else { const art = law.arts.find(x => x.no === a.no); h += lwArtHtml(law, art, {}); } });
+            list.innerHTML = h; cnt.textContent = '共 ' + law.arts.length + ' 條（點條號展開）'; return;
+        }
+        // 條號查詢：35 / 35-1 / 35之1 / 第35條第1項第2款
+        const s = raw.replace(/\s+/g, '');
+        const m = s.match(/^第?(\d+)(?:[-－之](\d+))?條?(?:之(\d+))?(?:第?(\d+)項)?(?:第?([一二三四五六七八九十\d]+)款)?$/);
+        if (m && !all) {
+            const key = m[1] + (m[2] || m[3] ? '-' + (m[2] || m[3]) : '');
+            const art = law.arts.find(x => x.key === key);
+            if (!art) { list.innerHTML = '<div class="lw-empty">找不到「' + cdEsc(law.short) + '」第 ' + cdEsc(key) + ' 條<br>（可能已刪除、尚未收錄，或條號輸入有誤）</div>'; cnt.textContent = ''; return; }
+            const para = m[4] ? +m[4] : 0, sub = m[5] ? lwCnToNum(m[5]) : 0;
+            const nParas = art.paras.filter(x => x.lv === 0).length;
+            let note = '';
+            if (para && para > nParas) note = '<div class="lw-warn">⚠️ 第 ' + cdEsc(key) + ' 條只有 ' + nParas + ' 項，沒有第 ' + para + ' 項。</div>';
+            list.innerHTML = note + lwArtHtml(law, art, { open: true, para: para, sub: sub });
+            cnt.textContent = law.short + ' 第 ' + key + ' 條' + (para ? '第 ' + para + ' 項' : '') + (sub ? '第 ' + sub + ' 款' : ''); return;
+        }
+        // 關鍵字（多字以空白分隔，需同時符合）
+        const terms = raw.split(/\s+/).filter(Boolean);
+        const targets = all ? LW.idx.laws.map(l => l.pcode) : [LW.cur];
+        const run = async () => {
+            let h = '', n = 0, shown = 0;
+            for (const p of targets) {
+                const d = await lawLoad(p);
+                for (const a of d.arts) {
+                    if (terms.every(t => a.c.includes(t))) { n++; if (shown < 60) { h += lwArtHtml(d, a, { open: terms.length >= 1 && n <= 5, terms: terms, tag: all ? d.short : '' }); shown++; } }
+                }
+            }
+            list.innerHTML = n ? h : '<div class="lw-empty">🔍 找不到包含「' + cdEsc(raw) + '」的條文</div>';
+            cnt.textContent = '關鍵字「' + raw + '」：' + n + ' 條' + (n > shown ? '（僅顯示前 ' + shown + ' 條，請加關鍵字縮小範圍）' : '');
+        };
+        run();
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'lw-q') lawSearch(); });
 </script>
 </body>
 </html>
