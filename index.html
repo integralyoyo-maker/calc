@@ -1180,13 +1180,13 @@
             const label = nParas > 1 ? '第' + pn + '項' : '本文';
             if (!its.length) {   // 沒有款：標籤在左、文字在右
                 body += '<div class="lw-p' + (hit ? ' hit' : '') + '"><div class="lw-ph"><span class="lw-pn">' + label + '</span><div class="lw-pt">' + lwHl(x.t, terms) + '</div></div></div>';
-            } else {             // 有款：標籤獨立一行，款目用縮排與懸掛縮排排列
-                body += '<div class="lw-p lw-stack' + (hit ? ' hit' : '') + '"><div class="lw-pl">' + label + '</div>' + (x.t ? '<div class="lw-pt">' + lwHl(x.t, terms) + '</div>' : '') +
+            } else {             // 有款：標籤同樣在左，右側為內文＋款目（目用懸掛縮排）
+                body += '<div class="lw-p' + (hit ? ' hit' : '') + '"><div class="lw-ph"><span class="lw-pn">' + label + '</span><div class="lw-pt">' + lwHl(x.t, terms) +
                     its.map(y => {
                         const [m, rest] = mk(y);
                         const isSub = opt.para && pn === opt.para && opt.sub && y.lv === 1 && y.t.startsWith(lwCn(opt.sub) + '、');
                         return '<div class="lw-i lw-i' + y.lv + (isSub ? ' hit' : '') + '"><span class="lw-mk">' + cdEsc(m) + '</span><span class="lw-tx">' + lwHl(rest, terms) + '</span></div>';
-                    }).join('') + '</div>';
+                    }).join('') + '</div></div></div>';
             }
         });
         const flno = a.key;
