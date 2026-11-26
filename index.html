@@ -182,6 +182,10 @@
         #laws .lw-p.hit { background:var(--lw-hi-bg); border-radius:8px; padding-left:8px; padding-right:8px; }
         #laws .lw-i1.hit, #laws .lw-i2.hit { background:var(--lw-hi-bg); border-radius:6px; }
         #laws mark { background:var(--lw-hi-bg); color:var(--lw-hi); border-radius:3px; padding:0 1px; }
+        #laws .lw-figs { margin-top:10px; }
+        #laws .lw-figt { font-size:12px; opacity:.7; margin-bottom:6px; }
+        #laws .lw-fig { display:block; max-width:100%; height:auto; background:#fff; border-radius:8px; margin:6px 0; }
+        #laws .lw-hasfig { margin-right:4px; }
         #laws .lw-off { display:inline-block; font-size:13px; margin-top:8px; color:var(--lw-ac); }
         #laws .lw-empty { text-align:center; padding:36px 10px; color:var(--lw-mut); line-height:1.8; }
     </style>
@@ -1154,7 +1158,7 @@
         try {
             const d = await lawLoad(p);
             document.getElementById('lw-meta').innerHTML = cdEsc(d.name) + '｜最新修正日期 <b>' + lwRoc(d.modified) + '</b>｜共 ' + d.arts.length + ' 條｜資料取得 ' + cdEsc(LW.idx.syncedAt) +
-                '｜<a href="' + cdEsc(d.url) + '" target="_blank" rel="noopener">全國法規資料庫原文 ↗</a>' + (d.attachments ? '<br>※ 本法規另有附件（如表格）' + d.attachments + ' 項，未收錄於此，請至官網查閱。' : '');
+                '｜<a href="' + cdEsc(d.url) + '" target="_blank" rel="noopener">全國法規資料庫原文 ↗</a>' + (d.figs ? '<br>※ 有 🖼️ 標示的條文已附圖例（取自官方完整條文，每日自動更新）。' : (d.attachments ? '<br>※ 本法規另有附件（如表格）' + d.attachments + ' 項，未收錄於此，請至官網查閱。' : ''));
             document.getElementById('lw-note').innerHTML = d.effectiveNote && d.effectiveNote.trim() ? '<div class="lw-note">📌 施行注意（部分條文施行日期另定）：\n' + cdEsc(d.effectiveNote.trim().replace(/\n\s+/g, '')) + '</div>' : '';
         } catch (e) { document.getElementById('lw-meta').textContent = '⚠️ 載入失敗：' + e.message; return; }
         lawSearch(true);
@@ -1192,9 +1196,15 @@
         const flno = a.key;
         const url = 'https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=' + law.pcode + '&flno=' + encodeURIComponent(flno);
         const first = a.paras.length ? a.paras[0].t : '';
+        const fg = law.figs && law.figs[a.key];
+        let figHtml = '';
+        if (fg) {
+            for (let i = 1; i <= fg.n; i++) figHtml += '<img class="lw-fig" loading="lazy" alt="第 ' + cdEsc(a.key) + ' 條圖例" src="data/laws/figs/' + encodeURIComponent(a.key) + '-' + i + '.jpg">';
+            figHtml = '<div class="lw-figs"><div class="lw-figt">🖼️ 圖例（取自官方完整條文，內容以官網為準）</div>' + figHtml + (fg.url ? '<a class="lw-off" target="_blank" rel="noopener" href="' + cdEsc(fg.url) + '">開啟官方完整條文檔 ↗</a>' : '') + '</div>';
+        }
         return '<article class="lw-card' + (opt.open ? ' open' : '') + '"><div class="lw-ch" onclick="this.parentNode.classList.toggle(\'open\')"><span class="lw-no">第 ' + cdEsc(a.key) + ' 條</span>' +
-            (opt.tag ? '<span class="lw-lawtag">' + cdEsc(opt.tag) + '</span>' : '') + '<span class="lw-pv">' + cdEsc(first.slice(0, 40)) + '</span></div>' +
-            '<div class="lw-body">' + body + '<a class="lw-off" target="_blank" rel="noopener" href="' + url + '">在全國法規資料庫查看第 ' + cdEsc(a.key) + ' 條 ↗</a></div></article>';
+            (opt.tag ? '<span class="lw-lawtag">' + cdEsc(opt.tag) + '</span>' : '') + (fg ? '<span class="lw-hasfig" title="含圖例">🖼️</span>' : '') + '<span class="lw-pv">' + cdEsc(first.slice(0, 40)) + '</span></div>' +
+            '<div class="lw-body">' + body + figHtml + '<a class="lw-off" target="_blank" rel="noopener" href="' + url + '">在全國法規資料庫查看第 ' + cdEsc(a.key) + ' 條 ↗</a></div></article>';
     }
     function lawSearch(fromPick) {
         if (!fromPick) LW.q = document.getElementById('lw-q').value;
