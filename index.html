@@ -172,9 +172,13 @@
         #laws .lw-p:first-child { border-top:0; }
         #laws .lw-pn { flex:0 0 auto; align-self:flex-start; font-size:12px; font-weight:800; padding:2px 8px; border-radius:6px; background:var(--lw-ac-bg); color:var(--lw-ac); margin-top:3px; white-space:nowrap; }
         #laws .lw-pt { flex:1; min-width:0; word-break:break-word; }
-        #laws .lw-i1 { margin:3px 0 0 0; }
-        #laws .lw-i2 { margin:2px 0 0 1.3em; }
-        #laws .lw-i3 { margin:2px 0 0 2.6em; }
+        #laws .lw-stack .lw-pl { font-weight:800; font-size:14px; color:var(--lw-ac); margin-bottom:2px; }
+        #laws .lw-i { display:flex; align-items:flex-start; margin-top:2px; }
+        #laws .lw-mk { flex:0 0 auto; white-space:nowrap; }
+        #laws .lw-tx { flex:1; min-width:0; word-break:break-word; }
+        #laws .lw-i1 { margin-left:0; }
+        #laws .lw-i2 { margin-left:1em; }
+        #laws .lw-i3 { margin-left:2em; }
         #laws .lw-p.hit { background:var(--lw-hi-bg); border-radius:8px; padding-left:8px; padding-right:8px; }
         #laws .lw-i1.hit, #laws .lw-i2.hit { background:var(--lw-hi-bg); border-radius:6px; }
         #laws mark { background:var(--lw-hi-bg); color:var(--lw-hi); border-radius:3px; padding:0 1px; }
@@ -1163,22 +1167,28 @@
     function lwArtHtml(law, a, opt) {
         opt = opt || {};
         const terms = opt.terms || [];
-        let body = '', pn = 0;
-        a.paras.forEach(x => {
-            if (x.lv === 0) {
-                pn = x.n;
-                const hit = opt.para && pn === opt.para && !opt.sub;
-                body += '<div class="lw-p' + (hit ? ' hit' : '') + '"><div class="lw-ph"><span class="lw-pn">' + (a.paras.filter(y => y.lv === 0).length > 1 ? '第' + pn + '項' : '本文') + '</span><div class="lw-pt">' + lwHl(x.t, terms) + '</div></div>';
-                body += '@@ITEMS' + pn + '@@</div>';
-            }
-        });
+        let body = '';
         // 款目掛到所屬項
         const items = {};
         a.paras.forEach(x => { if (x.lv > 0) { (items[x.par] = items[x.par] || []).push(x); } });
-        body = body.replace(/@@ITEMS(\d+)@@/g, (m, n) => (items[n] || []).map(x => {
-            const isSub = opt.para && +n === opt.para && opt.sub && x.lv === 1 && x.t.startsWith(lwCn(opt.sub) + '、');
-            return '<div class="lw-i' + x.lv + (isSub ? ' hit' : '') + '">' + lwHl(x.t, terms) + '</div>';
-        }).join(''));
+        const nParas = a.paras.filter(y => y.lv === 0).length;
+        const mk = (x) => { const m = x.t.match(x.lv === 1 ? /^[一二三四五六七八九十]+、/ : (x.lv === 2 ? /^([（(][一二三四五六七八九十]+[）)]|\d+[、．.])/ : /^[（(]\d+[）)]/)); return m ? [m[0], x.t.slice(m[0].length)] : ['', x.t]; };
+        a.paras.forEach(x => {
+            if (x.lv !== 0) return;
+            const pn = x.n, its = items[pn] || [];
+            const hit = opt.para && pn === opt.para && !opt.sub;
+            const label = nParas > 1 ? '第' + pn + '項' : '本文';
+            if (!its.length) {   // 沒有款：標籤在左、文字在右
+                body += '<div class="lw-p' + (hit ? ' hit' : '') + '"><div class="lw-ph"><span class="lw-pn">' + label + '</span><div class="lw-pt">' + lwHl(x.t, terms) + '</div></div></div>';
+            } else {             // 有款：標籤獨立一行，款目用縮排與懸掛縮排排列
+                body += '<div class="lw-p lw-stack' + (hit ? ' hit' : '') + '"><div class="lw-pl">' + label + '</div>' + (x.t ? '<div class="lw-pt">' + lwHl(x.t, terms) + '</div>' : '') +
+                    its.map(y => {
+                        const [m, rest] = mk(y);
+                        const isSub = opt.para && pn === opt.para && opt.sub && y.lv === 1 && y.t.startsWith(lwCn(opt.sub) + '、');
+                        return '<div class="lw-i lw-i' + y.lv + (isSub ? ' hit' : '') + '"><span class="lw-mk">' + cdEsc(m) + '</span><span class="lw-tx">' + lwHl(rest, terms) + '</span></div>';
+                    }).join('') + '</div>';
+            }
+        });
         const flno = a.key;
         const url = 'https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=' + law.pcode + '&flno=' + encodeURIComponent(flno);
         const first = a.paras.length ? a.paras[0].t : '';
