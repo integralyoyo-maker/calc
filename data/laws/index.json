@@ -1,0 +1,41 @@
+{
+ "syncedAt": "2026-11-26 13:42",
+ "source": "https://law.moj.gov.tw/api/Ch/Law/JSON",
+ "laws": [
+  {
+   "short": "處罰條例",
+   "name": "道路交通管理處罰條例",
+   "pcode": "K0040012",
+   "modified": "20260817",
+   "articles": 134
+  },
+  {
+   "short": "安全規則",
+   "name": "道路交通安全規則",
+   "pcode": "K0040013",
+   "modified": "20261106",
+   "articles": 185
+  },
+  {
+   "short": "裁罰基準細則",
+   "name": "違反道路交通管理事件統一裁罰基準及處理細則",
+   "pcode": "D0080029",
+   "modified": "20261030",
+   "articles": 92
+  },
+  {
+   "short": "設置規則",
+   "name": "道路交通標誌標線號誌設置規則",
+   "pcode": "K0040014",
+   "modified": "20260311",
+   "articles": 273
+  },
+  {
+   "short": "事故處理辦法",
+   "name": "道路交通事故處理辦法",
+   "pcode": "D0080090",
+   "modified": "20240217",
+   "articles": 15
+  }
+ ]
+}
